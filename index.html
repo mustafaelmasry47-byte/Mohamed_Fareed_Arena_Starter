@@ -6,7 +6,7 @@
   <title>MOHAMED FAREED ARENA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="extra.css">
 </head>
 <body>
 <header class="topbar">
@@ -26,16 +26,17 @@
   </section>
   <section class="section" id="matches">
     <div class="section-head"><div><span class="eyebrow">على أرض الملعب</span><h2>المباريات</h2></div><span class="muted">جدول البطولة</span></div>
-    <div class="empty-state"><span>📅</span><h3>جدول المواجهات قريبًا</h3><p>سيتم نشر مباريات كل جولة بعد مراجعتها واعتمادها من إدارة البطولة.</p></div>
+    <div id="matches-list"></div>
   </section>
   <section class="section" id="table">
     <div class="section-head"><div><span class="eyebrow">مين في الصدارة؟</span><h2>جدول الترتيب</h2></div><span class="muted">يتحدث تلقائيًا بعد اعتماد النتائج</span></div>
-    <div class="table-wrap"><table><thead><tr><th>#</th><th>الفريق</th><th>لعب</th><th>فاز</th><th>تعادل</th><th>خسر</th><th>له</th><th>عليه</th><th>النقاط</th></tr></thead><tbody><tr><td colspan="9" class="empty-cell">سيظهر ترتيب الفرق هنا بعد تسجيلها.</td></tr></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>الفريق</th><th>لعب</th><th>فاز</th><th>تعادل</th><th>خسر</th><th>له</th><th>عليه</th><th>النقاط</th></tr></thead><tbody id="table-body"><tr><td colspan="9" class="empty-cell">سيظهر ترتيب الفرق هنا بعد تسجيلها.</td></tr></tbody></table></div>
   </section>
   <section class="section" id="leaders">
     <div class="section-head"><div><span class="eyebrow">نجوم البطولة</span><h2>المتصدرون</h2></div></div>
-    <div class="leader-grid"><article><span>⚽</span><h3>الهدافون</h3><p>أفضل الهدافين</p></article><article><span>🎯</span><h3>صناع الأهداف</h3><p>أكثر اللاعبين صناعةً</p></article><article><span>⭐</span><h3>الأعلى تقييمًا</h3><p>تقييمات اللاعبين من 10</p></article></div>
+    <div class="leader-grid"><article><span>⚽</span><h3>الهدافون</h3><p>أفضل الهدافين</p><ol id="lead-goals"></ol></article><article><span>🎯</span><h3>صناع الأهداف</h3><p>أكثر اللاعبين صناعةً</p><ol id="lead-assists"></ol></article><article><span>⭐</span><h3>الأعلى تقييمًا</h3><p>تقييمات اللاعبين من 10</p><ol id="lead-rating"></ol></article></div>
   </section>
 </main>
 <footer><span>MOHAMED FAREED ARENA</span><span>المنافسة تبدأ من هنا.</span></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script><script src="site.js"></script>
 </body></html>
