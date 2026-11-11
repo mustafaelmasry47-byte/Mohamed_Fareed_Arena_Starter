@@ -1,2 +1,2 @@
-// حط هنا بيانات مشروع Supabase (Project Settings > API). المفتاح لازم يكون anon/publishable بس.
-const CFG={url:'YOUR_SUPABASE_URL',key:'YOUR_SUPABASE_ANON_KEY'};
+// بيانات مشروع Supabase (المفتاح publishable وآمن يتحط هنا)
+const CFG={url:'https://sdbduoxiucxjweyokzgv.supabase.co',key:'sb_publishable_j4pW4xT9Bspua-qK17YSzw_gLzXPK-E'};
