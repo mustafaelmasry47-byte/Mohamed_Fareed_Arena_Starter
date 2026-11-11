@@ -3,7 +3,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const BUCKET='player-photos',MAX_PLAYERS=15,MAX_IMAGE=4*1024*1024;
 const say=(m,ok)=>{$('#msg').textContent=m;$('#msg').className='notice'+(ok?' ok':'')};
 const show=p=>{$('#login').hidden=p;$('#panel').hidden=!p};
-let T=[],P=[],M=[],selectedTeam=null,editingPlayer=null;
+let T=[],P=[],M=[],selectedTeam=null,editingPlayer=null,leaderOverrides=[];
 async function init(){const{data:{session}}=await sb.auth.getSession();if(!session)return show(false);const{data,error}=await sb.from('admin_users').select('user_id').eq('user_id',session.user.id);if(error||!data?.length){await sb.auth.signOut();say('هذا الحساب ليس حساب المشرف.');return show(false)}say('تم تسجيل الدخول.',1);show(true);await load()}
 $('#loginForm').onsubmit=async e=>{e.preventDefault();const{error}=await sb.auth.signInWithPassword({email:$('#email').value,password:$('#pass').value});if(error)say('بيانات الدخول غير صحيحة');else{await init();await loadAwards()}};
 $('#out').onclick=async()=>{await sb.auth.signOut();show(false);say('تم تسجيل الخروج.')};
@@ -16,6 +16,7 @@ async function load(){
  $('#editTeam').innerHTML=T.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
  $('#matches').innerHTML=M.map(m=>`<tr data-id="${m.id}"><td>${m.round_number}</td><td>${esc(teamName(m.home_team_id))} × ${esc(teamName(m.away_team_id))}</td><td><input type="datetime-local" class="kickoff" value="${m.kickoff_at?new Date(m.kickoff_at).toLocaleString("sv-SE").replace(" ","T").slice(0,16):""}"></td><td><input type="number" min="0" class="hs" value="${m.home_score??''}"></td><td><input type="number" min="0" class="as" value="${m.away_score??''}"></td><td><select class="st">${[['upcoming','قادمة'],['live','جارية'],['finished','انتهت']].map(([v,l])=>`<option value="${v}" ${v==m.status?'selected':''}>${l}</option>`).join('')}</select></td><td><input type="checkbox" class="pub" ${m.is_published?'checked':''}></td><td><button class="sv">حفظ</button></td></tr>`).join('');
  $('#smatch').innerHTML=M.map(m=>`<option value="${m.id}">ج${m.round_number}: ${esc(teamName(m.home_team_id))} × ${esc(teamName(m.away_team_id))}</option>`).join('');fillPlayers();
+ await loadLeaderOverrides();
  if(selectedTeam&&T.some(t=>t.id===selectedTeam))renderRoster();else if(selectedTeam){selectedTeam=null;showTeams()}
  return{};
 }
@@ -39,6 +40,34 @@ $('#teamForm').onsubmit=async e=>{e.preventDefault();const{error}=await sb.from(
 $('#gen').onclick=()=>{if(T.length!==6)return say('لازم يكون عندك 6 فرق بالظبط.');if(M.length&&!confirm('فيه مباريات موجودة بالفعل، والجدول الجديد هيتضاف فوقها. متأكد؟'))return;const n=6,rows=[];let a=T.map(t=>t.id);for(let r=0;r<n-1;r++){for(let i=0;i<n/2;i++){let h=a[i],w=a[n-1-i];if(i===0&&r%2)[h,w]=[w,h];rows.push({round_number:r+1,home_team_id:h,away_team_id:w},{round_number:r+n,home_team_id:w,away_team_id:h})}a=[a[0],a[n-1],...a.slice(1,n-1)]}sb.from('matches').insert(rows).then(async({error})=>{if(error)say(error.message);else{say('تم إنشاء 30 مباراة غير منشورة.',1);await refresh()}})};
 $('#matches').onclick=e=>{if(!e.target.classList.contains('sv'))return;const tr=e.target.closest('tr'),v=c=>tr.querySelector(c).value;sb.from('matches').update({kickoff_at:v('.kickoff')?new Date(v('.kickoff')).toISOString():null,home_score:v('.hs')===''?null:+v('.hs'),away_score:v('.as')===''?null:+v('.as'),status:v('.st'),is_published:tr.querySelector('.pub').checked}).eq('id',tr.dataset.id).then(async({error})=>{if(error)say(error.message);else{say('تم حفظ المباراة.',1);await refresh()}})};
 
+async function loadLeaderOverrides(){
+ const {data,error}=await sb.from('leader_overrides').select('*');
+ if(error){say('نفّذ ملف sql/leader-overrides.sql في Supabase أولًا: '+error.message);return}
+ leaderOverrides=data||[];
+ $('#leaderOverrides').innerHTML=P.map(p=>{const o=leaderOverrides.find(x=>x.player_id===p.id)||{};return '<tr data-player="'+p.id+'"><td>'+esc(p.name)+'</td><td>'+esc(teamName(p.team_id))+'</td><td><input class="ov-goals" type="number" min="0" placeholder="تلقائي" value="'+(o.goals_override??'')+'" style="width:85px"></td><td><input class="ov-assists" type="number" min="0" placeholder="تلقائي" value="'+(o.assists_override??'')+'" style="width:85px"></td><td><input class="ov-rating" type="number" min="0" max="10" step="0.1" placeholder="تلقائي" value="'+(o.rating_override??'')+'" style="width:85px"></td><td><button type="button" class="save-leader-override">حفظ</button> <button type="button" class="reset-leader-override danger">مسح</button></td></tr>'}).join('')||'<tr><td colspan="6">لا يوجد لاعبون مسجلون.</td></tr>';
+}
+$('#leaderOverrides').onclick=async e=>{
+ const tr=e.target.closest('tr[data-player]');if(!tr)return;const player_id=Number(tr.dataset.player);
+ if(e.target.closest('.save-leader-override')){
+  const val=sel=>tr.querySelector(sel).value===''?null:Number(tr.querySelector(sel).value);
+  const row={player_id,goals_override:val('.ov-goals'),assists_override:val('.ov-assists'),rating_override:val('.ov-rating'),updated_at:new Date().toISOString()};
+  if(row.goals_override!==null&&(!Number.isInteger(row.goals_override)||row.goals_override<0))return say('عدد الأهداف لازم يكون صفر أو أكبر.');
+  if(row.assists_override!==null&&(!Number.isInteger(row.assists_override)||row.assists_override<0))return say('عدد الأسيست لازم يكون صفر أو أكبر.');
+  if(row.rating_override!==null&&(row.rating_override<0||row.rating_override>10))return say('التقييم لازم يكون من 0 إلى 10.');
+  const {error}=await sb.from('leader_overrides').upsert(row,{onConflict:'player_id'});
+  if(error)say('تعذر حفظ التعديل: '+error.message);else{say('تم تعديل أرقام المتصدرين.',1);await loadLeaderOverrides()}
+ }
+ if(e.target.closest('.reset-leader-override')){
+  if(!confirm('ترجع أرقام اللاعب دي للحساب التلقائي؟'))return;
+  const {error}=await sb.from('leader_overrides').delete().eq('player_id',player_id);
+  if(error)say(error.message);else{say('تمت إعادة أرقام اللاعب للحساب التلقائي.',1);await loadLeaderOverrides()}
+ }
+};
+$('#clearLeaderOverrides').onclick=async()=>{
+ if(!confirm('متأكد؟ سيتم مسح كل التعديلات اليدوية وإرجاع ترتيب المتصدرين للأرقام المحسوبة من المباريات.'))return;
+ const {error}=await sb.from('leader_overrides').delete().neq('player_id',0);
+ if(error)say('تعذر مسح التعديلات: '+error.message);else{say('تم مسح كل التعديلات اليدوية.',1);await loadLeaderOverrides()}
+};
 async function loadAwards(){
  const {data,error}=await sb.from('tournament_awards').select('*').eq('id',1).maybeSingle();
  if(error){say('نفّذ ملف sql/weekly-leaders.sql في Supabase أولًا: '+error.message);return}
