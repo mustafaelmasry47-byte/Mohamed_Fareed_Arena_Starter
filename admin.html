@@ -48,12 +48,12 @@
 <div class="award-admin-card">
 <h3>متصدرين الأسبوع</h3><p class="muted small">حدد بنفسك بداية ونهاية الفترة التي تريد احتسابها. أعلى تقييم ومتوسط التقييم وتفاصيل المباريات ستظهر تلقائيًا.</p>
 <label>من تاريخ<input id="weekStart" type="date"></label><label>إلى تاريخ<input id="weekEnd" type="date"></label>
-<div class="dialog-actions"><button type="button" id="saveWeek">حفظ الفترة</button><button type="button" class="danger" id="clearWeek">مسح المتصدرين</button></div>
+<div class="award-actions"><button type="button" id="saveWeek" class="action-btn action-primary">📅 حفظ الفترة</button><button type="button" id="clearWeek" class="action-btn action-danger">🗑️ مسح متصدرين الأسبوع</button></div>
 </div>
 <div class="award-admin-card">
 <h3>أفضل لاعب في الشهر</h3><p class="muted small">الاختيار يدوي بالكامل من عندك، من غير تصويت أو حساب تلقائي.</p>
 <label>الشهر<input id="awardMonth" type="month"></label><label>اللاعب الفائز<select id="monthlyPlayer"><option value="">اختار اللاعب</option></select></label>
-<button type="button" id="saveMonthly">اعتماد أفضل لاعب في الشهر</button>
+<div class="award-actions"><button type="button" id="saveMonthly" class="action-btn action-primary">🏆 اعتماد الفائز</button><button type="button" id="clearMonthly" class="action-btn action-danger">🗑️ مسح لاعب الشهر</button></div>
 </div></div><p class="muted small">مسح متصدرين الأسبوع يخفي القائمة فقط ولا يحذف نتائج المباريات أو إحصائيات اللاعبين.</p>
 </section>
 <section id="stats-view" class="admin-view" hidden>
