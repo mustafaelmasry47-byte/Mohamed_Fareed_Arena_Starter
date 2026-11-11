@@ -11,7 +11,7 @@
 <body>
 <header class="topbar">
   <a class="brand" href="#"><span class="brand-mark">MFA</span><span>MOHAMED FAREED <b>ARENA</b></span></a>
-  <nav><a href="#teams-section">الفرق واللاعبون</a><a href="#matches">المباريات</a><a href="#table">الترتيب</a><a href="#leaders">المتصدرون</a></nav>
+  <nav><a href="#teams-section">الفرق واللاعبون</a><a href="#matches">المباريات</a><a href="#table">الترتيب</a><a href="#weekly-leaders">متصدرين الأسبوع</a><a href="#monthly-award">أفضل لاعب في الشهر</a><a href="#leaders">إحصائيات البطولة</a></nav>
   <a class="admin-link" href="admin.html">دخول الإدارة</a>
 </header>
 <main>
@@ -39,6 +39,14 @@
   <section class="section" id="table">
     <div class="section-head"><div><span class="eyebrow">مين في الصدارة؟</span><h2>جدول الترتيب</h2></div><span class="muted">يتحدث تلقائيًا بعد اعتماد النتائج</span></div>
     <div class="table-wrap"><table><thead><tr><th>#</th><th>الفريق</th><th>لعب</th><th>فاز</th><th>تعادل</th><th>خسر</th><th>له</th><th>عليه</th><th>النقاط</th></tr></thead><tbody id="table-body"><tr><td colspan="9" class="empty-cell">سيظهر ترتيب الفرق هنا بعد تسجيلها.</td></tr></tbody></table></div>
+  </section>
+  <section class="section" id="weekly-leaders">
+    <div class="section-head"><div><span class="eyebrow">نجوم الفترة المحددة</span><h2>متصدرين الأسبوع</h2></div><span class="muted" id="weekly-period"></span></div>
+    <div id="weekly-leader-list" class="weekly-leader-list"><p class="muted">لم يتم تحديد فترة الأسبوع بعد.</p></div>
+  </section>
+  <section class="section" id="monthly-award">
+    <div class="section-head"><div><span class="eyebrow">اختيار إدارة البطولة</span><h2>أفضل لاعب في الشهر</h2></div></div>
+    <div id="monthly-player-card"><p class="muted">سيتم الإعلان عن اللاعب المختار قريبًا.</p></div>
   </section>
   <section class="section" id="leaders">
     <div class="section-head"><div><span class="eyebrow">نجوم البطولة</span><h2>المتصدرون</h2></div></div>
