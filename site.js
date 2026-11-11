@@ -4,10 +4,10 @@ const matchHost=$('#matches-list'),teamsHost=$('#teams-list'),screen=$('#directo
 if(!matchHost||!teamsHost||!screen||!content)return;
 if(CFG.url.includes('YOUR_')){matchHost.innerHTML='<div class="empty-state"><h3>الموقع لسه متربطش بقاعدة البيانات</h3><p>عدّل ملف config.js.</p></div>';return}
 const sb=supabase.createClient(CFG.url,CFG.key);let backAction=()=>{screen.hidden=true;};
-const [t,m,s,p,aw]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name'),sb.from('tournament_awards').select('*').eq('id',1).maybeSingle()]);
+const [t,m,s,p,aw,ov]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name'),sb.from('tournament_awards').select('*').eq('id',1).maybeSingle(),sb.from('leader_overrides').select('*')]);
 const err=[t,m,s,p].find(x=>x.error)?.error;
 if(err){matchHost.innerHTML='<div class="empty-state">حصلت مشكلة في تحميل بيانات البطولة. حاول تحديث الصفحة.</div>';console.error(err);return}
-const T=t.data||[],M=m.data||[],P=p.data||[],S=s.data||[];
+const T=t.data||[],M=m.data||[],P=p.data||[],S=s.data||[],OV=ov.data||[];
 const tm=id=>T.find(x=>x.id==id)||{name:'غير محدد',badge_emoji:'⚽'},nm=id=>esc(tm(id).badge_emoji+' '+tm(id).name);
 const statsFor=id=>{const rows=S.filter(x=>x.player_id==id),rated=rows.filter(x=>x.rating!=null);return{matches:rows.length,goals:rows.reduce((a,x)=>a+(+x.goals||0),0),assists:rows.reduce((a,x)=>a+(+x.assists||0),0),rating:rated.length?(rated.reduce((a,x)=>a+(+x.rating||0),0)/rated.length).toFixed(1):'—',mom:rows.filter(x=>x.is_man_of_match).length}};
 function openScreen(markup){content.innerHTML=markup;screen.hidden=false;document.body.classList.add('directory-open');screen.scrollTop=0;window.scrollTo({top:0,behavior:'smooth'})}
@@ -46,5 +46,5 @@ if(winner){const month=awards.award_month?new Date(awards.award_month+'T00:00:00
 
 const Pstats={};S.forEach(x=>{const pl=P.find(y=>y.id==x.player_id);if(!pl)return;const k=x.player_id,z=Pstats[k]??={n:pl.name,tm:pl.team_id,g:0,a:0,rs:0,rc:0};z.g+=x.goals||0;z.a+=x.assists||0;if(x.rating!=null){z.rs+=+x.rating;z.rc++}});
 const list=(id,arr,f)=>{const a=arr.slice(0,5);if(a.length)$(id).innerHTML=a.map(p=>'<li>'+esc(p.n)+' <small class="muted">'+esc(tm(p.tm).name)+'</small><span>'+f(p)+'</span></li>').join('')};
-const L=Object.values(Pstats);list('#lead-goals',L.filter(p=>p.g>0).sort((a,b)=>b.g-a.g),p=>p.g);list('#lead-assists',L.filter(p=>p.a>0).sort((a,b)=>b.a-a.a),p=>p.a);list('#lead-rating',L.filter(p=>p.rc).map(p=>({...p,r:p.rs/p.rc})).sort((a,b)=>b.r-a.r),p=>p.r.toFixed(1));
+const L=Object.values(Pstats).map(p=>{const player=P.find(y=>y.name===p.n&&y.team_id===p.tm),o=OV.find(x=>x.player_id==player?.id);return {...p,g:o?.goals_override??p.g,a:o?.assists_override??p.a,r:o?.rating_override??(p.rc?p.rs/p.rc:null)}});list('#lead-goals',L.filter(p=>p.g>0).sort((a,b)=>b.g-a.g),p=>p.g);list('#lead-assists',L.filter(p=>p.a>0).sort((a,b)=>b.a-a.a),p=>p.a);list('#lead-rating',L.filter(p=>p.r!=null).sort((a,b)=>b.r-a.r),p=>Number(p.r).toFixed(1));
 })();
