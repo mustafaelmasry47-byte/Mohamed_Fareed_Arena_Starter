@@ -11,6 +11,7 @@
 <button type="button" class="admin-tab active" data-view="teams-view">👥 الفرق</button>
 <button type="button" class="admin-tab" data-view="matches-view">⚽ المباريات والنتائج</button>
 <button type="button" class="admin-tab" data-view="stats-view">📊 إحصائيات اللاعبين</button>
+<button type="button" class="admin-tab" data-view="awards-view">🏆 المتصدرون والجوائز</button>
 </nav>
 <section id="teams-view" class="admin-view">
 <div class="section-head"><div><span class="eyebrow">إدارة القوائم</span><h2>الفرق</h2></div><span class="muted">اختار فريق علشان تفتح قائمته</span></div>
@@ -40,6 +41,20 @@
 <h2>المباريات والنتائج</h2>
 <div class="table-wrap"><table><thead><tr><th>جولة</th><th>المباراة</th><th>أهداف المضيف</th><th>أهداف الضيف</th><th>الحالة</th><th>منشورة</th><th></th></tr></thead><tbody id="matches"></tbody></table></div>
 <div class="row" style="margin-top:16px"><button class="ghost" id="gen">إنشاء جدول الـ30 مباراة تلقائيًا</button><span class="muted">لازم يكون عندك 6 فرق. الجدول الجديد غير منشور تلقائيًا.</span></div>
+</section>
+<section id="awards-view" class="admin-view" hidden>
+<h2>🏆 إدارة المتصدرين والجوائز</h2>
+<div class="award-admin-grid">
+<div class="award-admin-card">
+<h3>متصدرين الأسبوع</h3><p class="muted small">حدد بنفسك بداية ونهاية الفترة التي تريد احتسابها. أعلى تقييم ومتوسط التقييم وتفاصيل المباريات ستظهر تلقائيًا.</p>
+<label>من تاريخ<input id="weekStart" type="date"></label><label>إلى تاريخ<input id="weekEnd" type="date"></label>
+<div class="dialog-actions"><button type="button" id="saveWeek">حفظ الفترة</button><button type="button" class="danger" id="clearWeek">مسح المتصدرين</button></div>
+</div>
+<div class="award-admin-card">
+<h3>أفضل لاعب في الشهر</h3><p class="muted small">الاختيار يدوي بالكامل من عندك، من غير تصويت أو حساب تلقائي.</p>
+<label>الشهر<input id="awardMonth" type="month"></label><label>اللاعب الفائز<select id="monthlyPlayer"><option value="">اختار اللاعب</option></select></label>
+<button type="button" id="saveMonthly">اعتماد أفضل لاعب في الشهر</button>
+</div></div><p class="muted small">مسح متصدرين الأسبوع يخفي القائمة فقط ولا يحذف نتائج المباريات أو إحصائيات اللاعبين.</p>
 </section>
 <section id="stats-view" class="admin-view" hidden>
 <h2>إحصائيات لاعب في مباراة</h2><form id="statForm"><select id="smatch" required></select><select id="splayer" required></select><input id="sg" type="number" min="0" value="0" title="أهداف" style="width:70px"><input id="sa" type="number" min="0" value="0" title="صناعة" style="width:70px"><input id="sr" type="number" min="0" max="10" step="0.1" placeholder="تقييم" style="width:80px"><label><input id="sm" type="checkbox"> أفضل لاعب</label><button>حفظ الإحصائيات</button></form><p class="muted small">الأهداف، صناعة الأهداف، تقييم من 10، وأفضل لاعب في المباراة.</p>
