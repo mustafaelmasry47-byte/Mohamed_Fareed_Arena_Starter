@@ -48,3 +48,5 @@
 .admin-view button:not(.admin-tab):not(.action-btn){border-radius:11px;font-family:inherit;font-weight:800;transition:transform .18s,filter .18s}
 .admin-view button:not(.admin-tab):not(.action-btn):hover{transform:translateY(-1px);filter:brightness(1.08)}
 @media(max-width:560px){.admin-nav .admin-tab{flex:1 1 100%;text-align:center}.award-actions{display:grid;grid-template-columns:1fr}.action-btn{width:100%}}
+
+#leaderOverrides input{max-width:100%;box-sizing:border-box}.admin-view .table-wrap table{min-width:680px}#leaders-manage-view .award-actions{margin-top:16px}
