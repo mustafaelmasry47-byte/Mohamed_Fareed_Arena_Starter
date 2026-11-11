@@ -4,7 +4,7 @@ const matchHost=$('#matches-list'),teamsHost=$('#teams-list'),screen=$('#directo
 if(!matchHost||!teamsHost||!screen||!content)return;
 if(CFG.url.includes('YOUR_')){matchHost.innerHTML='<div class="empty-state"><h3>الموقع لسه متربطش بقاعدة البيانات</h3><p>عدّل ملف config.js.</p></div>';return}
 const sb=supabase.createClient(CFG.url,CFG.key);let backAction=()=>{screen.hidden=true;};
-const [t,m,s,p]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name')]);
+const [t,m,s,p,aw]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name'),sb.from('tournament_awards').select('*').eq('id',1).maybeSingle()]);
 const err=[t,m,s,p].find(x=>x.error)?.error;
 if(err){matchHost.innerHTML='<div class="empty-state">حصلت مشكلة في تحميل بيانات البطولة. حاول تحديث الصفحة.</div>';console.error(err);return}
 const T=t.data||[],M=m.data||[],P=p.data||[],S=s.data||[];
@@ -25,6 +25,25 @@ const R=Object.fromEntries(T.map(x=>[x.id,{id:x.id,p:0,w:0,d:0,l:0,gf:0,ga:0}]))
 M.filter(x=>x.status==='finished'&&x.home_score!=null&&x.away_score!=null).forEach(x=>{const h=R[x.home_team_id],a=R[x.away_team_id];if(!h||!a)return;h.p++;a.p++;h.gf+=x.home_score;h.ga+=x.away_score;a.gf+=x.away_score;a.ga+=x.home_score;if(x.home_score>x.away_score){h.w++;a.l++}else if(x.home_score<x.away_score){a.w++;h.l++}else{h.d++;a.d++}});
 const rows=Object.values(R).map(r=>({...r,pts:r.w*3+r.d,gd:r.gf-r.ga})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
 if(rows.length)$('#table-body').innerHTML=rows.map((r,i)=>'<tr class="'+(i?'':'first')+'"><td>'+(i+1)+'</td><td class="tn">'+nm(r.id)+'</td><td>'+r.p+'</td><td>'+r.w+'</td><td>'+r.d+'</td><td>'+r.l+'</td><td>'+r.gf+'</td><td>'+r.ga+'</td><td><b>'+r.pts+'</b></td></tr>').join('');
+
+const awards=aw.data||null;
+const weeklyHost=$('#weekly-leader-list'),periodHost=$('#weekly-period');
+if(awards&&!awards.weekly_cleared&&awards.week_start&&awards.week_end){
+ periodHost.textContent=new Date(awards.week_start+'T00:00:00').toLocaleDateString('ar-EG')+' — '+new Date(awards.week_end+'T00:00:00').toLocaleDateString('ar-EG');
+ const from=new Date(awards.week_start+'T00:00:00'),to=new Date(awards.week_end+'T23:59:59.999');
+ const byPlayer={};
+ S.forEach(row=>{const match=M.find(x=>x.id==row.match_id),player=P.find(x=>x.id==row.player_id);if(!match||!player||!match.kickoff_at)return;const date=new Date(match.kickoff_at);if(date<from||date>to)return;
+ const item=byPlayer[player.id]??={player,rows:[],goals:0,assists:0,mom:0,best:null};
+ item.rows.push(row);item.goals+=Number(row.goals||0);item.assists+=Number(row.assists||0);if(row.is_man_of_match)item.mom++;
+ if(row.rating!=null&&(!item.best||Number(row.rating)>Number(item.best.rating)))item.best={rating:row.rating,match};
+ byPlayer[player.id]=item;
+ });
+ const ranked=Object.values(byPlayer).filter(x=>x.rows.some(y=>y.rating!=null)).map(x=>({...x,avg:x.rows.filter(y=>y.rating!=null).reduce((a,y)=>a+Number(y.rating),0)/x.rows.filter(y=>y.rating!=null).length})).sort((a,b)=>b.avg-a.avg).slice(0,10);
+ weeklyHost.innerHTML=ranked.length?ranked.map((x,i)=>'<article class="weekly-leader-card"><span class="weekly-rank">#'+(i+1)+'</span><div class="weekly-player-main"><b>'+esc(x.player.name)+'</b><small>'+esc(tm(x.player.team_id).name)+' · '+x.rows.length+' مباراة</small><p>الأهداف: '+x.goals+' · الأسيست: '+x.assists+' · رجل المباراة: '+x.mom+'</p><small>أعلى تقييم: '+(x.best?Number(x.best.rating).toFixed(1)+'/10 في '+esc(tm(x.best.match.home_team_id).name)+' × '+esc(tm(x.best.match.away_team_id).name):'لا يوجد تقييم')+'</small></div><strong class="weekly-average">'+x.avg.toFixed(1)+'</strong></article>').join(''):'<p class="muted">لا توجد تقييمات مسجلة في الفترة المحددة.</p>';
+}else{weeklyHost.innerHTML='<p class="muted">متصدرين الأسبوع غير متاحين حاليًا. ستظهر القائمة بعد تحديد الفترة من لوحة الإدارة.</p>';periodHost.textContent='';}
+const monthlyHost=$('#monthly-player-card'),winner=awards?.monthly_player_id?P.find(x=>x.id==awards.monthly_player_id):null;
+if(winner){const month=awards.award_month?new Date(awards.award_month+'T00:00:00').toLocaleDateString('ar-EG',{month:'long',year:'numeric'}):'';monthlyHost.innerHTML='<article class="monthly-winner-card"><div class="monthly-crown">🏆</div>'+(winner.photo_url?'<img class="monthly-player-photo" src="'+esc(winner.photo_url)+'" alt="">':'<div class="monthly-player-photo monthly-placeholder">⭐</div>')+'<div><span class="eyebrow">'+esc(month)+'</span><h3>'+esc(winner.name)+'</h3><p>'+esc(tm(winner.team_id).name)+'</p><small>اختيار إدارة البطولة</small></div></article>';}else monthlyHost.innerHTML='<p class="muted">سيتم الإعلان عن اللاعب المختار قريبًا.</p>';
+
 const Pstats={};S.forEach(x=>{const pl=P.find(y=>y.id==x.player_id);if(!pl)return;const k=x.player_id,z=Pstats[k]??={n:pl.name,tm:pl.team_id,g:0,a:0,rs:0,rc:0};z.g+=x.goals||0;z.a+=x.assists||0;if(x.rating!=null){z.rs+=+x.rating;z.rc++}});
 const list=(id,arr,f)=>{const a=arr.slice(0,5);if(a.length)$(id).innerHTML=a.map(p=>'<li>'+esc(p.n)+' <small class="muted">'+esc(tm(p.tm).name)+'</small><span>'+f(p)+'</span></li>').join('')};
 const L=Object.values(Pstats);list('#lead-goals',L.filter(p=>p.g>0).sort((a,b)=>b.g-a.g),p=>p.g);list('#lead-assists',L.filter(p=>p.a>0).sort((a,b)=>b.a-a.a),p=>p.a);list('#lead-rating',L.filter(p=>p.rc).map(p=>({...p,r:p.rs/p.rc})).sort((a,b)=>b.r-a.r),p=>p.r.toFixed(1));
