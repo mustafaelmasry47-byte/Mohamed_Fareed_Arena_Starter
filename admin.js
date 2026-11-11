@@ -5,7 +5,7 @@ const say=(m,ok)=>{$('#msg').textContent=m;$('#msg').className='notice'+(ok?' ok
 const show=p=>{$('#login').hidden=p;$('#panel').hidden=!p};
 let T=[],P=[],M=[],selectedTeam=null,editingPlayer=null;
 async function init(){const{data:{session}}=await sb.auth.getSession();if(!session)return show(false);const{data,error}=await sb.from('admin_users').select('user_id').eq('user_id',session.user.id);if(error||!data?.length){await sb.auth.signOut();say('هذا الحساب ليس حساب المشرف.');return show(false)}say('تم تسجيل الدخول.',1);show(true);await load()}
-$('#loginForm').onsubmit=async e=>{e.preventDefault();const{error}=await sb.auth.signInWithPassword({email:$('#email').value,password:$('#pass').value});if(error)say('بيانات الدخول غير صحيحة');else await init()};
+$('#loginForm').onsubmit=async e=>{e.preventDefault();const{error}=await sb.auth.signInWithPassword({email:$('#email').value,password:$('#pass').value});if(error)say('بيانات الدخول غير صحيحة');else{await init();await loadAwards()}};
 $('#out').onclick=async()=>{await sb.auth.signOut();show(false);say('تم تسجيل الخروج.')};
 async function refresh(){const{error}=await load();if(error)say('خطأ في تحميل البيانات: '+error.message)}
 async function load(){
