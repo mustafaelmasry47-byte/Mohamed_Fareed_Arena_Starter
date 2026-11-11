@@ -1,15 +1,56 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة البطولة | MFA</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="extra.css"></head>
-<body><header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">MFA</span><span>MOHAMED FAREED <b>ARENA</b></span></a><a class="admin-link" href="index.html">العودة للموقع</a></header>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة البطولة | MFA</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="extra.css"></head>
+<body>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">MFA</span><span>MOHAMED FAREED <b>ARENA</b></span></a><a class="admin-link" href="index.html">العودة للموقع</a></header>
 <main class="admin-main">
 <div id="msg" class="notice" style="max-width:1000px;margin:16px auto" role="status">سجّل الدخول بحساب المشرف.</div>
 <section class="login-card" id="login"><h1>لوحة الإدارة</h1><form id="loginForm"><input id="email" type="email" placeholder="البريد الإلكتروني" required><input id="pass" type="password" placeholder="كلمة المرور" required><button>دخول</button></form></section>
 <div class="panel" id="panel" hidden>
-<section><div class="section-head"><div><span class="eyebrow">إدارة البطولة</span><h2>الفرق</h2></div><span class="muted">بطاقات الفرق المسجلة</span></div><div id="teams" class="admin-team-grid"></div><form id="teamForm" class="admin-add-form"><input id="tname" placeholder="اسم الفريق" required><input id="tshort" placeholder="اختصار" size="6"><input id="temoji" placeholder="⚽" size="3"><button>إضافة فريق</button></form>
-<p class="row" style="margin-top:14px"><button class="ghost" id="gen">إنشاء جدول الـ30 مباراة تلقائيًا</button><span class="muted">لازم 6 فرق. المباريات بتتخزن غير منشورة.</span></p></section>
-<section><div class="section-head"><div><span class="eyebrow">قائمة اللاعبين</span><h2>اللاعبين</h2></div><span class="muted">الأساسيون والبدلاء</span></div><form id="playerForm" class="admin-add-form"><select id="pteam" required></select><input id="pname" placeholder="اسم اللاعب" required><input id="pnum" type="number" placeholder="رقم" style="width:80px"><input id="ppos" placeholder="المركز" size="8"><label class="inline-check"><input id="psub" type="checkbox"> لاعب بديل</label><input id="pphoto" type="url" placeholder="رابط صورة اللاعب (اختياري)"><button>إضافة لاعب</button></form><div id="players-cards" class="admin-player-grid"></div></section>
-<section><h2>المباريات والنتائج</h2><div class="table-wrap"><table><thead><tr><th>جولة</th><th>المباراة</th><th>الأهداف (المضيف)</th><th>الأهداف (الضيف)</th><th>الحالة</th><th>منشورة</th><th></th></tr></thead><tbody id="matches"></tbody></table></div></section>
-<section><h2>إحصائيات لاعب في مباراة</h2><form id="statForm"><select id="smatch"></select><select id="splayer"></select><input id="sg" type="number" min="0" value="0" title="أهداف" style="width:70px"><input id="sa" type="number" min="0" value="0" title="صناعة" style="width:70px"><input id="sr" type="number" min="0" max="10" step="0.1" placeholder="تقييم" style="width:80px"><label><input id="sm" type="checkbox"> أفضل لاعب</label><button>حفظ</button></form><p class="muted small">الخانات: أهداف، صناعة أهداف، تقييم من 10.</p></section>
-<button class="ghost" id="out" style="justify-self:start">تسجيل الخروج</button></div>
-</main>
+<nav class="admin-nav" aria-label="أقسام الإدارة">
+<button type="button" class="admin-tab active" data-view="teams-view">👥 الفرق</button>
+<button type="button" class="admin-tab" data-view="matches-view">⚽ المباريات والنتائج</button>
+<button type="button" class="admin-tab" data-view="stats-view">📊 إحصائيات اللاعبين</button>
+</nav>
+<section id="teams-view" class="admin-view">
+<div class="section-head"><div><span class="eyebrow">إدارة القوائم</span><h2>الفرق</h2></div><span class="muted">اختار فريق علشان تفتح قائمته</span></div>
+<div id="teams" class="admin-team-grid"></div>
+<form id="teamForm" class="admin-add-form team-create-form"><h3>إضافة فريق جديد</h3><input id="tname" placeholder="اسم الفريق" required><input id="tshort" placeholder="اختصار الفريق"><input id="temoji" placeholder="⚽" maxlength="4"><button>＋ إضافة الفريق</button></form>
+</section>
+<section id="team-detail" class="team-detail-panel" hidden>
+<button type="button" id="backTeams" class="ghost">← الرجوع لكل الفرق</button>
+<div class="team-detail-heading"><div><span class="eyebrow">قائمة الفريق</span><h2 id="selectedTeamName">الفريق</h2></div><div class="roster-counter"><strong id="rosterCount">0</strong><span>/ 15 لاعب</span></div></div>
+<div class="roster-limit"><div id="rosterProgress"></div></div>
+<form id="playerForm" class="player-create-form">
+<h3>إضافة لاعب للقائمة</h3>
+<div class="player-form-grid">
+<label>اسم اللاعب<input id="pname" placeholder="اكتب اسم اللاعب" required maxlength="80"></label>
+<label>رقم القميص<input id="pnum" type="number" min="0" max="999" placeholder="رقم اللاعب"></label>
+<label>مركز اللاعب<input id="ppos" placeholder="مثلاً: حارس مرمى"></label>
+<label class="inline-check"><input id="psub" type="checkbox"> لاعب بديل</label>
+<label class="photo-picker">صورة اللاعب (اختياري)<input id="pphoto" type="file" accept="image/*"><small>اختار صورة من جهازك، وهتترفع تلقائيًا.</small></label>
+</div>
+<button id="addPlayerBtn">＋ إضافة اللاعب</button>
+<p id="photoStatus" class="muted small" aria-live="polite"></p>
+</form>
+<div class="roster-heading"><h3>اللاعبون المسجلون</h3><span class="muted">تقدر تعدّل أو تمسح أي لاعب</span></div>
+<div id="teamPlayers" class="admin-player-grid"></div>
+</section>
+<section id="matches-view" class="admin-view" hidden>
+<h2>المباريات والنتائج</h2>
+<div class="table-wrap"><table><thead><tr><th>جولة</th><th>المباراة</th><th>أهداف المضيف</th><th>أهداف الضيف</th><th>الحالة</th><th>منشورة</th><th></th></tr></thead><tbody id="matches"></tbody></table></div>
+<div class="row" style="margin-top:16px"><button class="ghost" id="gen">إنشاء جدول الـ30 مباراة تلقائيًا</button><span class="muted">لازم يكون عندك 6 فرق. الجدول الجديد غير منشور تلقائيًا.</span></div>
+</section>
+<section id="stats-view" class="admin-view" hidden>
+<h2>إحصائيات لاعب في مباراة</h2><form id="statForm"><select id="smatch" required></select><select id="splayer" required></select><input id="sg" type="number" min="0" value="0" title="أهداف" style="width:70px"><input id="sa" type="number" min="0" value="0" title="صناعة" style="width:70px"><input id="sr" type="number" min="0" max="10" step="0.1" placeholder="تقييم" style="width:80px"><label><input id="sm" type="checkbox"> أفضل لاعب</label><button>حفظ الإحصائيات</button></form><p class="muted small">الأهداف، صناعة الأهداف، تقييم من 10، وأفضل لاعب في المباراة.</p>
+</section>
+<button class="ghost" id="out" style="justify-self:start">تسجيل الخروج</button>
+</div></main>
+<dialog id="playerDialog" class="edit-dialog"><form id="editPlayerForm" method="dialog"><div class="dialog-head"><h3>تعديل بيانات اللاعب</h3><button type="button" class="dialog-close" id="closePlayerDialog">×</button></div>
+<label>اسم اللاعب<input id="editName" required maxlength="80"></label>
+<div class="player-form-grid"><label>رقم القميص<input id="editNumber" type="number" min="0" max="999"></label><label>المركز<input id="editPosition"></label><label>الفريق<select id="editTeam"></select></label><label class="inline-check"><input id="editSub" type="checkbox"> لاعب بديل</label></div>
+<label class="photo-picker">تغيير الصورة<input id="editPhoto" type="file" accept="image/*"><small>اختار صورة جديدة من جهازك.</small></label>
+<label class="inline-check"><input id="removePhoto" type="checkbox"> حذف الصورة الحالية</label>
+<div class="dialog-actions"><button type="submit">حفظ التعديلات</button><button type="button" class="ghost" id="cancelEdit">إلغاء</button></div>
+</form></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script><script src="admin.js"></script></body></html>
