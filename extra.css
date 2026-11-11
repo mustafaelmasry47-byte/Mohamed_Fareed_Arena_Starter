@@ -32,3 +32,19 @@
 .monthly-crown{font-size:32px}.monthly-player-photo{width:90px;height:90px;flex:0 0 90px;border-radius:16px;object-fit:cover;background:#263b5d}.monthly-placeholder{display:grid;place-items:center;font-size:40px}
 .monthly-winner-card h3{margin:4px 0;font-size:23px}.monthly-winner-card p{margin:3px 0;color:#c3cede}.monthly-winner-card small{color:#e8bd62}
 @media(max-width:700px){.award-admin-grid{grid-template-columns:1fr}.weekly-leader-card{align-items:flex-start}.monthly-winner-card{flex-wrap:wrap}}
+
+/* Refined admin navigation and award action buttons */
+.admin-nav{gap:9px;padding:9px;background:linear-gradient(135deg,#0b172d,#142746);border:1px solid #ffffff18;border-radius:18px;box-shadow:0 12px 28px #0002}
+.admin-nav .admin-tab{position:relative;flex:1 1 175px;min-height:48px;padding:11px 16px;border:1px solid #ffffff16;border-radius:12px;background:#ffffff08;color:#d6dfec;font-family:inherit;font-weight:800;font-size:13px;transition:transform .18s,border-color .18s,background .18s,box-shadow .18s}
+.admin-nav .admin-tab:hover{transform:translateY(-2px);border-color:#e8bd6270;background:#ffffff12}
+.admin-nav .admin-tab.active{background:linear-gradient(135deg,#f0ce7d,#dba943);color:#17233a;border-color:#f0ce7d;box-shadow:0 7px 18px #dba94330}
+.award-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.action-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 17px;border-radius:12px;border:1px solid transparent;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;transition:transform .18s,filter .18s,box-shadow .18s}
+.action-btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.action-btn:active{transform:translateY(0)}
+.action-primary{color:#17233a;background:linear-gradient(135deg,#f1d18a,#dcae50);box-shadow:0 7px 16px #dcae5025}
+.action-danger{color:#ffdce1;background:linear-gradient(135deg,#542b3b,#3c2030);border-color:#e77c8b65}
+.action-danger:hover{box-shadow:0 7px 18px #d34c6725;border-color:#ff9aa7}
+.admin-view button:not(.admin-tab):not(.action-btn){border-radius:11px;font-family:inherit;font-weight:800;transition:transform .18s,filter .18s}
+.admin-view button:not(.admin-tab):not(.action-btn):hover{transform:translateY(-1px);filter:brightness(1.08)}
+@media(max-width:560px){.admin-nav .admin-tab{flex:1 1 100%;text-align:center}.award-actions{display:grid;grid-template-columns:1fr}.action-btn{width:100%}}
