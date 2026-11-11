@@ -59,6 +59,11 @@ $('#clearWeek').onclick=async()=>{
  const{error}=await sb.from('tournament_awards').upsert({id:1,week_start:null,week_end:null,weekly_cleared:true,updated_at:new Date().toISOString()},{onConflict:'id'});
  if(error)say('تعذر مسح المتصدرين: '+error.message);else{$('#weekStart').value='';$('#weekEnd').value='';say('تم مسح قائمة متصدرين الأسبوع.',1)}
 };
+$('#clearMonthly').onclick=async()=>{
+ if(!confirm('متأكد إنك عايز تمسح لقب أفضل لاعب في الشهر؟ هيختفي من الموقع العام، لكن بيانات اللاعب وإحصائياته هتفضل زي ما هي.'))return;
+ const{error}=await sb.from('tournament_awards').upsert({id:1,monthly_player_id:null,award_month:null,updated_at:new Date().toISOString()},{onConflict:'id'});
+ if(error)say('تعذر مسح لاعب الشهر: '+error.message);else{$('#monthlyPlayer').value='';$('#awardMonth').value='';say('تم مسح اختيار أفضل لاعب في الشهر.',1)}
+};
 $('#saveMonthly').onclick=async()=>{
  const month=$('#awardMonth').value,player=$('#monthlyPlayer').value;
  if(!month||!player)return say('اختار الشهر واللاعب الفائز.');
