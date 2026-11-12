@@ -70,34 +70,21 @@ $('#clearLeaderOverrides').onclick=async()=>{
 };
 async function loadAwards(){
  const {data,error}=await sb.from('tournament_awards').select('*').eq('id',1).maybeSingle();
- if(error){say('نفّذ ملف sql/weekly-leaders.sql في Supabase أولًا: '+error.message);return}
- $('#weekStart').value=data?.week_start||'';$('#weekEnd').value=data?.week_end||'';
- $('#awardMonth').value=data?.award_month?String(data.award_month).slice(0,7):'';
+ if(error){say('تأكد من إعداد جدول الجوائز في Supabase: '+error.message);return}
+ $('#awardMonth').value=data?.award_month||'';
  $('#monthlyPlayer').innerHTML='<option value="">اختار اللاعب</option>'+P.map(p=>'<option value="'+p.id+'">'+esc(p.name)+' — '+esc(teamName(p.team_id))+'</option>').join('');
  $('#monthlyPlayer').value=data?.monthly_player_id||'';
 }
-$('#saveWeek').onclick=async()=>{
- const start=$('#weekStart').value,end=$('#weekEnd').value;
- if(!start||!end)return say('حدد تاريخ البداية والنهاية.');
- if(start>end)return say('تاريخ البداية لازم يكون قبل تاريخ النهاية.');
- const{error}=await sb.from('tournament_awards').upsert({id:1,week_start:start,week_end:end,weekly_cleared:false,updated_at:new Date().toISOString()},{onConflict:'id'});
- if(error)say('تعذر حفظ الفترة: '+error.message);else say('تم حفظ فترة متصدرين الأسبوع.',1);
-};
-$('#clearWeek').onclick=async()=>{
- if(!confirm('متأكد؟ سيتم إخفاء قائمة متصدرين الأسبوع فقط، ولن تُحذف أي إحصائيات أو نتائج.'))return;
- const{error}=await sb.from('tournament_awards').upsert({id:1,week_start:null,week_end:null,weekly_cleared:true,updated_at:new Date().toISOString()},{onConflict:'id'});
- if(error)say('تعذر مسح المتصدرين: '+error.message);else{$('#weekStart').value='';$('#weekEnd').value='';say('تم مسح قائمة متصدرين الأسبوع.',1)}
-};
 $('#clearMonthly').onclick=async()=>{
- if(!confirm('متأكد إنك عايز تمسح لقب أفضل لاعب في الشهر؟ هيختفي من الموقع العام، لكن بيانات اللاعب وإحصائياته هتفضل زي ما هي.'))return;
+ if(!confirm('متأكد إنك عايز تمسح لقب أفضل لاعب في الأسبوع؟ هيختفي من الموقع العام، لكن بيانات اللاعب وإحصائياته هتفضل زي ما هي.'))return;
  const{error}=await sb.from('tournament_awards').upsert({id:1,monthly_player_id:null,award_month:null,updated_at:new Date().toISOString()},{onConflict:'id'});
- if(error)say('تعذر مسح لاعب الشهر: '+error.message);else{$('#monthlyPlayer').value='';$('#awardMonth').value='';say('تم مسح اختيار أفضل لاعب في الشهر.',1)}
+ if(error)say('تعذر مسح لاعب الأسبوع: '+error.message);else{$('#monthlyPlayer').value='';$('#awardMonth').value='';say('تم مسح اختيار أفضل لاعب في الأسبوع.',1)}
 };
 $('#saveMonthly').onclick=async()=>{
- const month=$('#awardMonth').value,player=$('#monthlyPlayer').value;
- if(!month||!player)return say('اختار الشهر واللاعب الفائز.');
- const{error}=await sb.from('tournament_awards').upsert({id:1,monthly_player_id:Number(player),award_month:month+'-01',updated_at:new Date().toISOString()},{onConflict:'id'});
- if(error)say('تعذر اعتماد اللاعب: '+error.message);else say('تم اعتماد أفضل لاعب في الشهر يدويًا.',1);
+ const week=$('#awardMonth').value,player=$('#monthlyPlayer').value;
+ if(!week||!player)return say('اختار بداية الأسبوع واللاعب الفائز.');
+ const{error}=await sb.from('tournament_awards').upsert({id:1,monthly_player_id:Number(player),award_month:week,updated_at:new Date().toISOString()},{onConflict:'id'});
+ if(error)say('تعذر اعتماد اللاعب: '+error.message);else say('تم اعتماد أفضل لاعب في الأسبوع يدويًا.',1);
 };
 
 $('#statForm').onsubmit=e=>{e.preventDefault();sb.from('player_match_stats').upsert({match_id:+$('#smatch').value,player_id:+$('#splayer').value,goals:+$('#sg').value,assists:+$('#sa').value,rating:$('#sr').value===''?null:+$('#sr').value,is_man_of_match:$('#sm').checked},{onConflict:'match_id,player_id'}).then(({error})=>say(error?'خطأ: '+error.message:'تم حفظ الإحصائيات.',!error))};
