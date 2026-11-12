@@ -27,22 +27,8 @@ const rows=Object.values(R).map(r=>({...r,pts:r.w*3+r.d,gd:r.gf-r.ga})).sort((a,
 if(rows.length)$('#table-body').innerHTML=rows.map((r,i)=>'<tr class="'+(i?'':'first')+'"><td>'+(i+1)+'</td><td class="tn">'+nm(r.id)+'</td><td>'+r.p+'</td><td>'+r.w+'</td><td>'+r.d+'</td><td>'+r.l+'</td><td>'+r.gf+'</td><td>'+r.ga+'</td><td><b>'+r.pts+'</b></td></tr>').join('');
 
 const awards=aw.data||null;
-const weeklyHost=$('#weekly-leader-list'),periodHost=$('#weekly-period');
-if(awards&&!awards.weekly_cleared&&awards.week_start&&awards.week_end){
- periodHost.textContent=new Date(awards.week_start+'T00:00:00').toLocaleDateString('ar-EG')+' — '+new Date(awards.week_end+'T00:00:00').toLocaleDateString('ar-EG');
- const from=new Date(awards.week_start+'T00:00:00'),to=new Date(awards.week_end+'T23:59:59.999');
- const byPlayer={};
- S.forEach(row=>{const match=M.find(x=>x.id==row.match_id),player=P.find(x=>x.id==row.player_id);if(!match||!player||!match.kickoff_at)return;const date=new Date(match.kickoff_at);if(date<from||date>to)return;
- const item=byPlayer[player.id]??={player,rows:[],goals:0,assists:0,mom:0,best:null};
- item.rows.push(row);item.goals+=Number(row.goals||0);item.assists+=Number(row.assists||0);if(row.is_man_of_match)item.mom++;
- if(row.rating!=null&&(!item.best||Number(row.rating)>Number(item.best.rating)))item.best={rating:row.rating,match};
- byPlayer[player.id]=item;
- });
- const ranked=Object.values(byPlayer).filter(x=>x.rows.some(y=>y.rating!=null)).map(x=>({...x,avg:x.rows.filter(y=>y.rating!=null).reduce((a,y)=>a+Number(y.rating),0)/x.rows.filter(y=>y.rating!=null).length})).sort((a,b)=>b.avg-a.avg).slice(0,10);
- weeklyHost.innerHTML=ranked.length?ranked.map((x,i)=>'<article class="weekly-leader-card"><span class="weekly-rank">#'+(i+1)+'</span><div class="weekly-player-main"><b>'+esc(x.player.name)+'</b><small>'+esc(tm(x.player.team_id).name)+' · '+x.rows.length+' مباراة</small><p>الأهداف: '+x.goals+' · الأسيست: '+x.assists+' · رجل المباراة: '+x.mom+'</p><small>أعلى تقييم: '+(x.best?Number(x.best.rating).toFixed(1)+'/10 في '+esc(tm(x.best.match.home_team_id).name)+' × '+esc(tm(x.best.match.away_team_id).name):'لا يوجد تقييم')+'</small></div><strong class="weekly-average">'+x.avg.toFixed(1)+'</strong></article>').join(''):'<p class="muted">لا توجد تقييمات مسجلة في الفترة المحددة.</p>';
-}else{weeklyHost.innerHTML='<p class="muted">متصدرين الأسبوع غير متاحين حاليًا. ستظهر القائمة بعد تحديد الفترة من لوحة الإدارة.</p>';periodHost.textContent='';}
-const monthlyHost=$('#monthly-player-card'),winner=awards?.monthly_player_id?P.find(x=>x.id==awards.monthly_player_id):null;
-if(winner){const month=awards.award_month?new Date(awards.award_month+'T00:00:00').toLocaleDateString('ar-EG',{month:'long',year:'numeric'}):'';monthlyHost.innerHTML='<article class="monthly-winner-card"><div class="monthly-crown">🏆</div>'+(winner.photo_url?'<img class="monthly-player-photo" src="'+esc(winner.photo_url)+'" alt="">':'<div class="monthly-player-photo monthly-placeholder">⭐</div>')+'<div><span class="eyebrow">'+esc(month)+'</span><h3>'+esc(winner.name)+'</h3><p>'+esc(tm(winner.team_id).name)+'</p><small>اختيار إدارة البطولة</small></div></article>';}else monthlyHost.innerHTML='<p class="muted">سيتم الإعلان عن اللاعب المختار قريبًا.</p>';
+const weeklyHost=$('#weekly-player-card'),winner=awards?.monthly_player_id?P.find(x=>x.id==awards.monthly_player_id):null;
+if(winner){const week=awards.award_month?new Date(awards.award_month+'T00:00:00').toLocaleDateString('ar-EG') : '';weeklyHost.innerHTML='<article class="monthly-winner-card"><div class="monthly-crown">🏆</div>'+(winner.photo_url?'<img class="monthly-player-photo" src="'+esc(winner.photo_url)+'" alt="">':'<div class="monthly-player-photo monthly-placeholder">⭐</div>')+'<div><span class="eyebrow">'+(week?'الأسبوع الذي يبدأ في '+esc(week):'أفضل لاعب في الأسبوع')+'</span><h3>'+esc(winner.name)+'</h3><p>'+esc(tm(winner.team_id).name)+'</p><small>اختيار إدارة البطولة</small></div></article>';}else weeklyHost.innerHTML='<p class="muted">سيتم الإعلان عن أفضل لاعب في الأسبوع قريبًا.</p>';
 
 const Pstats={};S.forEach(x=>{const pl=P.find(y=>y.id==x.player_id);if(!pl)return;const k=x.player_id,z=Pstats[k]??={id:k,n:pl.name,tm:pl.team_id,photo:pl.photo_url,g:0,a:0,rs:0,rc:0};z.g+=x.goals||0;z.a+=x.assists||0;if(x.rating!=null){z.rs+=+x.rating;z.rc++}});
 const list=(id,arr,f)=>{const a=arr.slice(0,5);$(id).innerHTML=a.length?a.map(p=>'<li class="leader-player-row">'+(p.photo?'<img class="leader-player-photo" src="'+esc(p.photo)+'" alt="" loading="lazy">':'<span class="leader-player-photo leader-player-placeholder">⚽</span>')+'<span class="leader-player-info"><b>'+esc(p.n)+'</b><small class="muted">'+esc(tm(p.tm).name)+'</small></span><strong class="leader-player-value">'+f(p)+'</strong></li>').join(''):'<li class="muted">لا توجد بيانات بعد</li>'};
