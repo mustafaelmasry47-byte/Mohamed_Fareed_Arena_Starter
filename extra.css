@@ -50,3 +50,13 @@
 @media(max-width:560px){.admin-nav .admin-tab{flex:1 1 100%;text-align:center}.award-actions{display:grid;grid-template-columns:1fr}.action-btn{width:100%}}
 
 #leaderOverrides input{max-width:100%;box-sizing:border-box}.admin-view .table-wrap table{min-width:680px}#leaders-manage-view .award-actions{margin-top:16px}
+
+/* Player portraits in public leaderboard lists */
+.leader-grid ol{padding:0;list-style:none;display:grid;gap:10px}
+.leader-grid ol li.leader-player-row{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:13px;background:rgba(255,255,255,.045);min-width:0}
+.leader-player-photo{width:44px;height:44px;flex:0 0 44px;display:block;object-fit:cover;border-radius:50%;border:2px solid rgba(232,189,98,.65);background:#1a2942}
+.leader-player-placeholder{display:grid;place-items:center;font-size:20px}
+.leader-player-info{display:flex;flex:1;min-width:0;flex-direction:column;gap:2px}
+.leader-player-info b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.leader-player-info small{font-size:11px}
+.leader-player-value{font-size:17px;color:#f0ce7d;min-width:30px;text-align:center}
