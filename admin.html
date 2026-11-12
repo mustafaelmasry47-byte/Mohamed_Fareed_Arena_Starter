@@ -46,15 +46,10 @@
 <h2>🏆 إدارة المتصدرين والجوائز</h2>
 <div class="award-admin-grid">
 <div class="award-admin-card">
-<h3>متصدرين الأسبوع</h3><p class="muted small">حدد بنفسك بداية ونهاية الفترة التي تريد احتسابها. أعلى تقييم ومتوسط التقييم وتفاصيل المباريات ستظهر تلقائيًا.</p>
-<label>من تاريخ<input id="weekStart" type="date"></label><label>إلى تاريخ<input id="weekEnd" type="date"></label>
-<div class="award-actions"><button type="button" id="saveWeek" class="action-btn action-primary">📅 حفظ الفترة</button><button type="button" id="clearWeek" class="action-btn action-danger">🗑️ مسح متصدرين الأسبوع</button></div>
-</div>
-<div class="award-admin-card">
-<h3>أفضل لاعب في الشهر</h3><p class="muted small">الاختيار يدوي بالكامل من عندك، من غير تصويت أو حساب تلقائي.</p>
-<label>الشهر<input id="awardMonth" type="month"></label><label>اللاعب الفائز<select id="monthlyPlayer"><option value="">اختار اللاعب</option></select></label>
-<div class="award-actions"><button type="button" id="saveMonthly" class="action-btn action-primary">🏆 اعتماد الفائز</button><button type="button" id="clearMonthly" class="action-btn action-danger">🗑️ مسح لاعب الشهر</button></div>
-</div></div><p class="muted small">مسح متصدرين الأسبوع يخفي القائمة فقط ولا يحذف نتائج المباريات أو إحصائيات اللاعبين.</p>
+<h3>أفضل لاعب في الأسبوع</h3><p class="muted small">اختيار اللاعب يدوي بالكامل من إدارة البطولة، وحدد تاريخ بداية الأسبوع لعرضه على الموقع.</p>
+<label>بداية الأسبوع<input id="awardMonth" type="date"></label><label>اللاعب الفائز<select id="monthlyPlayer"><option value="">اختار اللاعب</option></select></label>
+<div class="award-actions"><button type="button" id="saveMonthly" class="action-btn action-primary">🏆 اعتماد لاعب الأسبوع</button><button type="button" id="clearMonthly" class="action-btn action-danger">🗑️ مسح لاعب الأسبوع</button></div>
+</div>/div><p class="muted small">مسح متصدرين الأسبوع يخفي القائمة فقط ولا يحذف نتائج المباريات أو إحصائيات اللاعبين.</p>
 </section>
 <section id="leaders-manage-view" class="admin-view" hidden><h2>📈 التحكم في متصدري البطولة</h2><p class="muted small">عدّل أرقام أي لاعب يدويًا. اترك الخانة فارغة ليُستخدم الرقم المحسوب من إحصائيات المباريات.</p><div class="table-wrap"><table><thead><tr><th>اللاعب</th><th>الفريق</th><th>الأهداف</th><th>الأسيست</th><th>التقييم</th><th>تحكم</th></tr></thead><tbody id="leaderOverrides"></tbody></table></div><div class="award-actions"><button type="button" id="clearLeaderOverrides" class="action-btn action-danger">🗑️ مسح كل التعديلات اليدوية</button></div><p class="muted small">مسح التعديلات يرجّع ترتيب الهدافين وصناع الأهداف والأعلى تقييمًا للأرقام المحسوبة من إحصائيات المباريات، ولا يمسح أي مباراة.</p></section><section id="stats-view" class="admin-view" hidden>
 <h2>إحصائيات لاعب في مباراة</h2><form id="statForm"><select id="smatch" required></select><select id="splayer" required></select><input id="sg" type="number" min="0" value="0" title="أهداف" style="width:70px"><input id="sa" type="number" min="0" value="0" title="صناعة" style="width:70px"><input id="sr" type="number" min="0" max="10" step="0.1" placeholder="تقييم" style="width:80px"><label><input id="sm" type="checkbox"> أفضل لاعب</label><button>حفظ الإحصائيات</button></form><p class="muted small">الأهداف، صناعة الأهداف، تقييم من 10، وأفضل لاعب في المباراة.</p>
@@ -68,4 +63,4 @@
 <label class="inline-check"><input id="removePhoto" type="checkbox"> حذف الصورة الحالية</label>
 <div class="dialog-actions"><button type="submit">حفظ التعديلات</button><button type="button" class="ghost" id="cancelEdit">إلغاء</button></div>
 </form></dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script><script src="admin.js?v=leader-controls-1"></script></body></html>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script><script src="admin.js?v=weekly-award-1leader-controls-1"></script></body></html>
