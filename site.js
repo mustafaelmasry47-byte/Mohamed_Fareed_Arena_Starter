@@ -33,12 +33,9 @@ matchHost.onclick=e=>{
  const match=M.find(x=>String(x.id)===String(button.dataset.matchDetails));if(!match)return;
  const panel=button.closest('.match-card-wrap').querySelector('.match-details-panel');
  if(!panel.hidden){panel.hidden=true;button.textContent='تفاصيل المباراة';return}
- const rows=S.filter(x=>String(x.match_id)===String(match.id));
- const playerName=id=>P.find(p=>String(p.id)===String(id))?.name||'لاعب غير معروف';
- const renderTeam=(teamId,key,icon,label)=>{const items=rows.filter(x=>String(P.find(p=>String(p.id)===String(x.player_id))?.team_id)===String(teamId)&&(Number(x[key])||0)>0);return '<div class="match-detail-group"><h4>'+icon+' '+label+'</h4>'+(items.length?items.map(x=>'<div class="match-detail-player"><span>'+esc(playerName(x.player_id))+'</span><b>'+Number(x[key])+' '+(key==='goals'?'هدف':'أسيست')+'</b></div>').join(''):'<p class="muted">لم يتم تسجيل بيانات بعد.</p>')+'</div>'};
- const home=renderTeam(match.home_team_id,'goals','⚽','أهداف '+tm(match.home_team_id).name),away=renderTeam(match.away_team_id,'goals','⚽','أهداف '+tm(match.away_team_id).name);
- const assists=rows.filter(x=>(Number(x.assists)||0)>0),mom=rows.filter(x=>x.is_man_of_match);
- panel.innerHTML=match.status==='finished'?'<div class="match-detail-grid">'+home+away+'</div><div class="match-detail-group"><h4>🎯 صناع الأهداف</h4>'+(assists.length?assists.map(x=>'<div class="match-detail-player"><span>'+esc(playerName(x.player_id))+' — '+esc(tm(P.find(p=>String(p.id)===String(x.player_id))?.team_id).name||'')+'</span><b>'+Number(x.assists)+' أسيست</b></div>').join(''):'<p class="muted">لم يتم تسجيل صناع أهداف بعد.</p>')+'</div><div class="match-detail-group"><h4>⭐ رجل المباراة</h4>'+(mom.length?mom.map(x=>'<b>'+esc(playerName(x.player_id))+'</b>').join('، '):'<p class="muted">لم يتم اختيار رجل المباراة.</p>')+'</div>': '<p class="muted">ستظهر تفاصيل الهدافين وصناع الأهداف بعد انتهاء المباراة وتسجيل الإحصائيات من الإدارة.</p>';
+ const teamDetails=(teamId,detail,side)=>'<section class="match-manual-team"><h4>'+esc(tm(teamId).badge_emoji||'⚽')+' تفاصيل '+esc(tm(teamId).name)+' <small>('+side+')</small></h4><p>'+(detail?esc(detail).replace(/\r?\n/g,'<br>'):'لم تُضف تفاصيل لهذا الفريق حتى الآن.')+'</p></section>';
+ const home=teamDetails(match.home_team_id,match.home_details,'المضيف'),away=teamDetails(match.away_team_id,match.away_details,'الضيف');
+ panel.innerHTML='<div class="match-manual-details">'+home+away+'</div>';
  panel.hidden=false;button.textContent='إخفاء التفاصيل';
 };
 teamsHost.onclick=e=>{const b=e.target.closest('[data-team]');if(b)showTeam(b.dataset.team)};
