@@ -33,7 +33,7 @@ matchHost.onclick=e=>{
  const match=M.find(x=>String(x.id)===String(button.dataset.matchDetails));if(!match)return;
  const panel=button.closest('.match-card-wrap').querySelector('.match-details-panel');
  if(!panel.hidden){panel.hidden=true;button.textContent='تفاصيل المباراة';return}
- const teamDetails=(teamId,detail,side)=>'<section class="match-manual-team"><h4>'+esc(tm(teamId).badge_emoji||'⚽')+' تفاصيل '+esc(tm(teamId).name)+' <small>('+side+')</small></h4><p>'+(detail?esc(detail).replace(/\r?\n/g,'<br>'):'لم تُضف تفاصيل لهذا الفريق حتى الآن.')+'</p></section>';
+ const teamDetails=(teamId,detail,side)=>detail&&detail.trim()?'<section class="match-manual-team"><h4>'+esc(tm(teamId).badge_emoji||'⚽')+' تفاصيل '+esc(tm(teamId).name)+' <small>('+side+')</small></h4><p>'+esc(detail).replace(/\r?\n/g,'<br>')+'</p></section>':'';
  const home=teamDetails(match.home_team_id,match.home_details,'المضيف'),away=teamDetails(match.away_team_id,match.away_details,'الضيف');
  panel.innerHTML='<div class="match-manual-details">'+home+away+'</div>';
  panel.hidden=false;button.textContent='إخفاء التفاصيل';
