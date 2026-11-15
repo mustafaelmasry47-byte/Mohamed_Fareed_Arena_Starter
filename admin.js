@@ -14,7 +14,7 @@ async function load(){
  [T,P,M]=res.map(x=>x.data||[]);
  $('#teams').innerHTML=T.map(t=>{const count=P.filter(p=>p.team_id===t.id).length;return `<article class="admin-team-card"><div class="team-emblem">${esc(t.badge_emoji||'⚽')}</div><div class="admin-card-copy"><b>${esc(t.name)}</b><small>${count} من 15 لاعب</small></div><button type="button" class="open-roster" data-id="${t.id}">فتح القائمة ←</button><div class="card-actions"><button type="button" class="edit-team" data-id="${t.id}">تعديل</button><button type="button" class="delete-team danger" data-id="${t.id}">حذف</button></div></article>`}).join('')||'<p class="muted">لسه مفيش فرق. أضف أول فريق من النموذج.</p>';
  $('#editTeam').innerHTML=T.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
- $('#matches').innerHTML=M.map(m=>`<tr data-id="${m.id}"><td>${m.round_number}</td><td>${esc(teamName(m.home_team_id))} × ${esc(teamName(m.away_team_id))}</td><td><input type="datetime-local" class="kickoff" value="${m.kickoff_at?new Date(m.kickoff_at).toLocaleString("sv-SE").replace(" ","T").slice(0,16):""}"></td><td><input type="number" min="0" class="hs" value="${m.home_score??''}"></td><td><input type="number" min="0" class="as" value="${m.away_score??''}"></td><td><select class="st">${[['upcoming','قادمة'],['live','جارية'],['finished','انتهت']].map(([v,l])=>`<option value="${v}" ${v==m.status?'selected':''}>${l}</option>`).join('')}</select></td><td><input type="checkbox" class="pub" ${m.is_published?'checked':''}></td><td><button class="sv">حفظ</button></td></tr>`).join('');
+ $('#matches').innerHTML=M.map(m=>`<tr data-id="${m.id}"><td>${m.round_number}</td><td>${esc(teamName(m.home_team_id))} × ${esc(teamName(m.away_team_id))}</td><td><input type="datetime-local" class="kickoff" value="${m.kickoff_at?new Date(m.kickoff_at).toLocaleString("sv-SE").replace(" ","T").slice(0,16):""}"></td><td><input type="number" min="0" class="hs" value="${m.home_score??''}"></td><td><input type="number" min="0" class="as" value="${m.away_score??''}"></td><td><select class="st">${[['upcoming','قادمة'],['live','جارية'],['finished','انتهت']].map(([v,l])=>`<option value="${v}" ${v==m.status?'selected':''}>${l}</option>`).join('')}</select></td><td><input type="checkbox" class="pub" ${m.is_published?'checked':''}></td><td><button class="sv">حفظ</button></td></tr><tr class="match-notes-row" data-id="${m.id}"><td colspan="8"><div class="match-notes-editor"><label>🟦 تفاصيل ${esc(teamName(m.home_team_id))} (المضيف)<textarea class="home-details" rows="3" placeholder="اكتب تفاصيل الفريق المضيف...">${esc(m.home_details||'')}</textarea></label><label>🟥 تفاصيل ${esc(teamName(m.away_team_id))} (الضيف)<textarea class="away-details" rows="3" placeholder="اكتب تفاصيل الفريق الضيف...">${esc(m.away_details||'')}</textarea></label></div><small class="muted">اكتب تفاصيل كل فريق في خانته، ثم اضغط حفظ في صف المباراة بالأعلى.</small></td></tr>`).join('');
  $('#smatch').innerHTML=M.map(m=>`<option value="${m.id}">ج${m.round_number}: ${esc(teamName(m.home_team_id))} × ${esc(teamName(m.away_team_id))}</option>`).join('');fillPlayers();
  await loadLeaderOverrides();
  if(selectedTeam&&T.some(t=>t.id===selectedTeam))renderRoster();else if(selectedTeam){selectedTeam=null;showTeams()}
@@ -40,54 +40,5 @@ $('#closePlayerDialog').onclick=closeDialog;$('#cancelEdit').onclick=closeDialog
 $('#editPlayerForm').onsubmit=async e=>{e.preventDefault();if(!editingPlayer)return;const btn=e.submitter;btn.disabled=true;try{const newTeam=Number($('#editTeam').value),targetCount=P.filter(x=>x.team_id===newTeam&&x.id!==editingPlayer.id).length;if(targetCount>=MAX_PLAYERS)throw Error('الفريق المختار مكتمل. الحد الأقصى 15 لاعب.');let photo=editingPlayer.photo_url;if($('#removePhoto').checked)photo=null;const file=$('#editPhoto').files[0];if(file)photo=await uploadPhoto(file,newTeam);const{error}=await sb.from('players').update({team_id:newTeam,name:$('#editName').value.trim(),shirt_number:$('#editNumber').value===''?null:Number($('#editNumber').value),position:$('#editPosition').value.trim()||null,is_substitute:$('#editSub').checked,photo_url:photo}).eq('id',editingPlayer.id);if(error)throw error;closeDialog();say('تم تحديث بيانات اللاعب.',1);await refresh()}catch(err){say(err.message||'تعذر تعديل اللاعب.')}finally{btn.disabled=false}};
 $('#teamForm').onsubmit=async e=>{e.preventDefault();const{error}=await sb.from('teams').insert({name:$('#tname').value.trim(),short_name:$('#tshort').value.trim()||null,badge_emoji:$('#temoji').value.trim()||'⚽'});if(error)say('تعذرت إضافة الفريق: '+error.message);else{say('تمت إضافة الفريق.',1);e.target.reset();await refresh()}};
 $('#gen').onclick=()=>{if(T.length!==6)return say('لازم يكون عندك 6 فرق بالظبط.');if(M.length&&!confirm('فيه مباريات موجودة بالفعل، والجدول الجديد هيتضاف فوقها. متأكد؟'))return;const n=6,rows=[];let a=T.map(t=>t.id);for(let r=0;r<n-1;r++){for(let i=0;i<n/2;i++){let h=a[i],w=a[n-1-i];if(i===0&&r%2)[h,w]=[w,h];rows.push({round_number:r+1,home_team_id:h,away_team_id:w},{round_number:r+n,home_team_id:w,away_team_id:h})}a=[a[0],a[n-1],...a.slice(1,n-1)]}sb.from('matches').insert(rows).then(async({error})=>{if(error)say(error.message);else{say('تم إنشاء 30 مباراة غير منشورة.',1);await refresh()}})};
-$('#matches').onclick=e=>{if(!e.target.classList.contains('sv'))return;const tr=e.target.closest('tr'),v=c=>tr.querySelector(c).value;sb.from('matches').update({kickoff_at:v('.kickoff')?new Date(v('.kickoff')).toISOString():null,home_score:v('.hs')===''?null:+v('.hs'),away_score:v('.as')===''?null:+v('.as'),status:v('.st'),is_published:tr.querySelector('.pub').checked}).eq('id',tr.dataset.id).then(async({error})=>{if(error)say(error.message);else{say('تم حفظ المباراة.',1);await refresh()}})};
-
-async function loadLeaderOverrides(){
- const {data,error}=await sb.from('leader_overrides').select('*');
- if(error){say('نفّذ ملف sql/leader-overrides.sql في Supabase أولًا: '+error.message);return}
- leaderOverrides=data||[];
- $('#leaderOverrides').innerHTML=P.map(p=>{const o=leaderOverrides.find(x=>x.player_id===p.id)||{};return '<tr data-player="'+p.id+'"><td>'+esc(p.name)+'</td><td>'+esc(teamName(p.team_id))+'</td><td><input class="ov-goals" type="number" min="0" placeholder="تلقائي" value="'+(o.goals_override??'')+'" style="width:85px"></td><td><input class="ov-assists" type="number" min="0" placeholder="تلقائي" value="'+(o.assists_override??'')+'" style="width:85px"></td><td><input class="ov-rating" type="number" min="0" max="10" step="0.1" placeholder="تلقائي" value="'+(o.rating_override??'')+'" style="width:85px"></td><td><button type="button" class="save-leader-override">حفظ</button> <button type="button" class="reset-leader-override danger">مسح</button></td></tr>'}).join('')||'<tr><td colspan="6">لا يوجد لاعبون مسجلون.</td></tr>';
-}
-$('#leaderOverrides').onclick=async e=>{
- const tr=e.target.closest('tr[data-player]');if(!tr)return;const player_id=Number(tr.dataset.player);
- if(e.target.closest('.save-leader-override')){
-  const val=sel=>tr.querySelector(sel).value===''?null:Number(tr.querySelector(sel).value);
-  const row={player_id,goals_override:val('.ov-goals'),assists_override:val('.ov-assists'),rating_override:val('.ov-rating'),updated_at:new Date().toISOString()};
-  if(row.goals_override!==null&&(!Number.isInteger(row.goals_override)||row.goals_override<0))return say('عدد الأهداف لازم يكون صفر أو أكبر.');
-  if(row.assists_override!==null&&(!Number.isInteger(row.assists_override)||row.assists_override<0))return say('عدد الأسيست لازم يكون صفر أو أكبر.');
-  if(row.rating_override!==null&&(row.rating_override<0||row.rating_override>10))return say('التقييم لازم يكون من 0 إلى 10.');
-  const {error}=await sb.from('leader_overrides').upsert(row,{onConflict:'player_id'});
-  if(error)say('تعذر حفظ التعديل: '+error.message);else{say('تم تعديل أرقام المتصدرين.',1);await loadLeaderOverrides()}
- }
- if(e.target.closest('.reset-leader-override')){
-  if(!confirm('ترجع أرقام اللاعب دي للحساب التلقائي؟'))return;
-  const {error}=await sb.from('leader_overrides').delete().eq('player_id',player_id);
-  if(error)say(error.message);else{say('تمت إعادة أرقام اللاعب للحساب التلقائي.',1);await loadLeaderOverrides()}
- }
-};
-$('#clearLeaderOverrides').onclick=async()=>{
- if(!confirm('متأكد؟ سيتم مسح كل التعديلات اليدوية وإرجاع ترتيب المتصدرين للأرقام المحسوبة من المباريات.'))return;
- const {error}=await sb.from('leader_overrides').delete().neq('player_id',0);
- if(error)say('تعذر مسح التعديلات: '+error.message);else{say('تم مسح كل التعديلات اليدوية.',1);await loadLeaderOverrides()}
-};
-async function loadAwards(){
- const {data,error}=await sb.from('tournament_awards').select('*').eq('id',1).maybeSingle();
- if(error){say('تأكد من إعداد جدول الجوائز في Supabase: '+error.message);return}
- $('#awardMonth').value=data?.award_month||'';
- $('#monthlyPlayer').innerHTML='<option value="">اختار اللاعب</option>'+P.map(p=>'<option value="'+p.id+'">'+esc(p.name)+' — '+esc(teamName(p.team_id))+'</option>').join('');
- $('#monthlyPlayer').value=data?.monthly_player_id||'';
-}
-$('#clearMonthly').onclick=async()=>{
- if(!confirm('متأكد إنك عايز تمسح لقب أفضل لاعب في الأسبوع؟ هيختفي من الموقع العام، لكن بيانات اللاعب وإحصائياته هتفضل زي ما هي.'))return;
- const{error}=await sb.from('tournament_awards').upsert({id:1,monthly_player_id:null,award_month:null,updated_at:new Date().toISOString()},{onConflict:'id'});
- if(error)say('تعذر مسح لاعب الأسبوع: '+error.message);else{$('#monthlyPlayer').value='';$('#awardMonth').value='';say('تم مسح اختيار أفضل لاعب في الأسبوع.',1)}
-};
-$('#saveMonthly').onclick=async()=>{
- const week=$('#awardMonth').value,player=$('#monthlyPlayer').value;
- if(!week||!player)return say('اختار بداية الأسبوع واللاعب الفائز.');
- const{error}=await sb.from('tournament_awards').upsert({id:1,monthly_player_id:Number(player),award_month:week,updated_at:new Date().toISOString()},{onConflict:'id'});
- if(error)say('تعذر اعتماد اللاعب: '+error.message);else say('تم اعتماد أفضل لاعب في الأسبوع يدويًا.',1);
-};
-
-$('#statForm').onsubmit=async e=>{e.preventDefault();const matchId=Number($('#smatch').value),playerId=Number($('#splayer').value);if(!matchId||!playerId)return say('اختار المباراة واللاعب الأول.');const{error}=await sb.from('player_match_stats').upsert({match_id:matchId,player_id:playerId,goals:Number($('#sg').value)||0,assists:Number($('#sa').value)||0,rating:$('#sr').value===''?null:Number($('#sr').value),is_man_of_match:$('#sm').checked},{onConflict:'match_id,player_id'});if(error)say('خطأ في حفظ الإحصائيات: '+error.message);else{say('تم حفظ إحصائيات '+(P.find(p=>Number(p.id)===playerId)?.name||'اللاعب')+' للمباراة المحددة.',1);await loadPlayerStat()}};
+$('#matches').onclick=e=>{if(!e.target.classList.contains('sv'))return;const tr=e.target.closest('tr'),notes=tr.nextElementSibling,v=c=>tr.querySelector(c).value;const update={kickoff_at:v('.kickoff')?new Date(v('.kickoff')).toISOString():null,home_score:v('.hs')===''?null:+v('.hs'),away_score:v('.as')===''?null:+v('.as'),status:v('.st'),is_published:tr.querySelector('.pub').checked,home_details:notes?.querySelector('.home-details')?.value.trim()||null,away_details:notes?.querySelector('.away-details')?.value.trim()||null};sb.from('matches').update(update).eq('id',tr.dataset.id).then(async({error})=>{if(error)say('تعذر حفظ المباراة. تأكد من تنفيذ sql/match-team-details.sql في Supabase. التفاصيل: '+error.message);else{say('تم حفظ نتيجة وتفاصيل الفريقين للمباراة.',1);await refresh()}})};
 init().then(loadAwards);
