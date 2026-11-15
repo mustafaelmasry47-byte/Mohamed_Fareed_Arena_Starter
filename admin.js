@@ -21,8 +21,10 @@ async function load(){
  return{};
 }
 function teamName(id){return T.find(t=>t.id==id)?.name||'بدون فريق'}
-function fillPlayers(){const m=M.find(x=>x.id==$('#smatch').value);$('#splayer').innerHTML=P.filter(p=>m&&(p.team_id==m.home_team_id||p.team_id==m.away_team_id)).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}
-$('#smatch').onchange=fillPlayers;
+function fillPlayers(){const m=M.find(x=>x.id==$('#smatch').value);$('#splayer').innerHTML=P.filter(p=>m&&(p.team_id==m.home_team_id||p.team_id==m.away_team_id)).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');if(!$('#splayer').options.length)$('#splayer').innerHTML='<option value="">لا يوجد لاعبون في الفريقين</option>'}
+async function loadPlayerStat(){const matchId=Number($('#smatch').value),playerId=Number($('#splayer').value);if(!matchId||!playerId){$('#sg').value=0;$('#sa').value=0;$('#sr').value='';$('#sm').checked=false;return}const{data,error}=await sb.from('player_match_stats').select('*').eq('match_id',matchId).eq('player_id',playerId).maybeSingle();if(error){say('تعذر تحميل إحصائيات اللاعب: '+error.message);return}$('#sg').value=data?.goals??0;$('#sa').value=data?.assists??0;$('#sr').value=data?.rating??'';$('#sm').checked=!!data?.is_man_of_match}
+$('#smatch').onchange=()=>{fillPlayers();loadPlayerStat()};
+$('#splayer').onchange=loadPlayerStat;
 function showView(id){document.querySelectorAll('.admin-view').forEach(x=>x.hidden=x.id!==id);document.querySelectorAll('.admin-tab').forEach(x=>x.classList.toggle('active',x.dataset.view===id));$('#team-detail').hidden=true}
 document.querySelectorAll('.admin-tab').forEach(b=>b.onclick=()=>showView(b.dataset.view));
 function showTeams(){showView('teams-view');$('#team-detail').hidden=true}
@@ -87,5 +89,5 @@ $('#saveMonthly').onclick=async()=>{
  if(error)say('تعذر اعتماد اللاعب: '+error.message);else say('تم اعتماد أفضل لاعب في الأسبوع يدويًا.',1);
 };
 
-$('#statForm').onsubmit=e=>{e.preventDefault();sb.from('player_match_stats').upsert({match_id:+$('#smatch').value,player_id:+$('#splayer').value,goals:+$('#sg').value,assists:+$('#sa').value,rating:$('#sr').value===''?null:+$('#sr').value,is_man_of_match:$('#sm').checked},{onConflict:'match_id,player_id'}).then(({error})=>say(error?'خطأ: '+error.message:'تم حفظ الإحصائيات.',!error))};
+$('#statForm').onsubmit=async e=>{e.preventDefault();const matchId=Number($('#smatch').value),playerId=Number($('#splayer').value);if(!matchId||!playerId)return say('اختار المباراة واللاعب الأول.');const{error}=await sb.from('player_match_stats').upsert({match_id:matchId,player_id:playerId,goals:Number($('#sg').value)||0,assists:Number($('#sa').value)||0,rating:$('#sr').value===''?null:Number($('#sr').value),is_man_of_match:$('#sm').checked},{onConflict:'match_id,player_id'});if(error)say('خطأ في حفظ الإحصائيات: '+error.message);else{say('تم حفظ إحصائيات '+(P.find(p=>Number(p.id)===playerId)?.name||'اللاعب')+' للمباراة المحددة.',1);await loadPlayerStat()}};
 init().then(loadAwards);
