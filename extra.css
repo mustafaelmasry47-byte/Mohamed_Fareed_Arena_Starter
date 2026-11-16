@@ -108,3 +108,15 @@ body:has(.admin-main) input[type="checkbox"] {accent-color:#e8bd62}
 .match-notes-actions button,.notes-toggle{cursor:pointer}
 .match-notes-row>td{padding:12px!important;background:#101e35}.match-notes-editor{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:12px}.match-notes-editor label{display:grid;gap:7px;color:#e8d8b4;font-weight:800}.match-notes-editor textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:86px;line-height:1.8}.match-notes-row small{display:block;margin-top:8px}.match-manual-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.match-manual-team{padding:15px;border:1px solid #e8bd6255;border-radius:13px;background:#ffffff07;min-width:0}.match-manual-team h4{margin:0 0 9px;color:#e8bd62;font-size:14px}.match-manual-team h4 small{color:#aebbd0;font-size:10px}.match-manual-team p{margin:0;color:#f2f0e9;font-size:13px;line-height:1.9;overflow-wrap:anywhere}
 @media(max-width:760px){.match-notes-editor,.match-manual-details{grid-template-columns:1fr}}
+
+/* Manual leaderboard and weekly winner history */
+.weekly-award-form{display:grid;grid-template-columns:1fr 1.5fr auto;align-items:end;gap:12px}
+.weekly-award-form label{display:grid;gap:6px;color:#cbd5e4;font-size:13px}
+.weekly-admin-list{display:grid;gap:9px}
+.weekly-admin-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid #ffffff20;border-radius:11px;background:#ffffff06}
+.weekly-admin-row b{color:#e8bd62;min-width:100px}
+.weekly-admin-row span{flex:1}
+.weekly-admin-row button{padding:7px 12px}
+#leaderOverrides input{min-width:78px;width:100%;max-width:110px}
+#leaderOverrides td{vertical-align:middle}
+@media(max-width:700px){.weekly-award-form{grid-template-columns:1fr}.weekly-admin-row{flex-wrap:wrap}.weekly-admin-row span{min-width:55%}}
