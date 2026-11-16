@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة البطولة | MFA</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="extra.css?v=match-details-toggle-2"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة البطولة | MFA</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="extra.css?v=manual-leaders-weekly-1"></head>
 <body>
 <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">MFA</span><span>MOHAMED FAREED <b>ARENA</b></span></a><a class="admin-link" href="index.html">العودة للموقع</a></header>
 <main class="admin-main">
@@ -43,15 +43,23 @@
 <div class="row" style="margin-top:16px"><button class="ghost" id="gen">إنشاء جدول الـ30 مباراة تلقائيًا</button><span class="muted">لازم يكون عندك 6 فرق. الجدول الجديد غير منشور تلقائيًا.</span></div>
 </section>
 <section id="awards-view" class="admin-view" hidden>
-<h2>🏆 إدارة المتصدرين والجوائز</h2>
-<div class="award-admin-grid">
+<h2>🏆 إدارة لاعب الأسبوع</h2>
 <div class="award-admin-card">
-<h3>أفضل لاعب في الأسبوع</h3><p class="muted small">اختيار اللاعب يدوي بالكامل من إدارة البطولة، وحدد تاريخ بداية الأسبوع لعرضه على الموقع.</p>
-<label>بداية الأسبوع<input id="awardMonth" type="date"></label><label>اللاعب الفائز<select id="monthlyPlayer"><option value="">اختار اللاعب</option></select></label>
-<div class="award-actions"><button type="button" id="saveMonthly" class="action-btn action-primary">🏆 اعتماد لاعب الأسبوع</button><button type="button" id="clearMonthly" class="action-btn action-danger">🗑️ مسح لاعب الأسبوع</button></div>
-</div>/div><p class="muted small">مسح متصدرين الأسبوع يخفي القائمة فقط ولا يحذف نتائج المباريات أو إحصائيات اللاعبين.</p>
+<p class="muted small">اختار رقم الأسبوع واللاعب الفائز. تقدر تسجل فائز لكل أسبوع، وتعدل فائز أسبوع سابق بإعادة الحفظ بنفس الرقم.</p>
+<div class="weekly-award-form">
+<label>رقم الأسبوع<input id="weeklyNumber" type="number" min="1" max="30" placeholder="مثلاً 1"></label>
+<label>اللاعب الفائز<select id="weeklyPlayer"><option value="">اختار اللاعب</option></select></label>
+<button type="button" id="saveWeeklyAward" class="action-btn action-primary">🏆 اعتماد الفائز</button>
+</div>
+<h3>سجل الفائزين</h3><div id="weeklyAwardsAdmin" class="weekly-admin-list"><p class="muted">تحميل سجل الفائزين…</p></div>
+</div>
 </section>
-<section id="leaders-manage-view" class="admin-view" hidden><h2>📈 التحكم في متصدري البطولة</h2><p class="muted small">عدّل أرقام أي لاعب يدويًا. اترك الخانة فارغة ليُستخدم الرقم المحسوب من إحصائيات المباريات.</p><div class="table-wrap"><table><thead><tr><th>اللاعب</th><th>الفريق</th><th>الأهداف</th><th>الأسيست</th><th>التقييم</th><th>تحكم</th></tr></thead><tbody id="leaderOverrides"></tbody></table></div><div class="award-actions"><button type="button" id="clearLeaderOverrides" class="action-btn action-danger">🗑️ مسح كل التعديلات اليدوية</button></div><p class="muted small">مسح التعديلات يرجّع ترتيب الهدافين وصناع الأهداف والأعلى تقييمًا للأرقام المحسوبة من إحصائيات المباريات، ولا يمسح أي مباراة.</p></section><section id="stats-view" class="admin-view" hidden>
+<section id="leaders-manage-view" class="admin-view" hidden>
+<h2>📈 التحكم اليدوي في المتصدرين</h2>
+<p class="muted small">اكتب أرقام كل لاعب بنفسك. أي خانة تسيبها فاضية هتستخدم الرقم المحسوب من إحصائيات المباريات. بعد الحفظ، ترتيب الجمهور يتحدث تلقائيًا.</p>
+<div class="table-wrap"><table><thead><tr><th>اللاعب</th><th>الفريق</th><th>الأهداف</th><th>الأسيست</th><th>التقييم / 10</th><th>تحكم</th></tr></thead><tbody id="leaderOverrides"></tbody></table></div>
+<div class="award-actions"><button type="button" id="clearLeaderOverrides" class="action-btn action-danger">🗑️ مسح كل الأرقام اليدوية</button></div>
+</section><section id="stats-view" class="admin-view" hidden>
 <h2>إحصائيات لاعب في مباراة</h2><form id="statForm"><select id="smatch" required></select><select id="splayer" required></select><input id="sg" type="number" min="0" value="0" title="أهداف" style="width:70px"><input id="sa" type="number" min="0" value="0" title="صناعة" style="width:70px"><input id="sr" type="number" min="0" max="10" step="0.1" placeholder="تقييم" style="width:80px"><label><input id="sm" type="checkbox"> أفضل لاعب</label><button>حفظ الإحصائيات</button></form><p class="muted small">الأهداف، صناعة الأهداف، تقييم من 10، وأفضل لاعب في المباراة.</p>
 </section>
 <button class="ghost" id="out" style="justify-self:start">تسجيل الخروج</button>
@@ -63,4 +71,4 @@
 <label class="inline-check"><input id="removePhoto" type="checkbox"> حذف الصورة الحالية</label>
 <div class="dialog-actions"><button type="submit">حفظ التعديلات</button><button type="button" class="ghost" id="cancelEdit">إلغاء</button></div>
 </form></dialog>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script><script src="admin.js?v=match-details-toggle-2"></script></body></html>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script><script src="admin.js?v=manual-leaders-weekly-1"></script></body></html>
