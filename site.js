@@ -4,7 +4,7 @@ const matchHost=$('#matches-list'),teamsHost=$('#teams-list'),screen=$('#directo
 if(!matchHost||!teamsHost||!screen||!content)return;
 if(CFG.url.includes('YOUR_')){matchHost.innerHTML='<div class="empty-state"><h3>الموقع لسه متربطش بقاعدة البيانات</h3><p>عدّل ملف config.js.</p></div>';return}
 const sb=supabase.createClient(CFG.url,CFG.key);let backAction=()=>{screen.hidden=true;};
-const [t,m,s,p,aw,ov]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name'),sb.from('tournament_awards').select('*').eq('id',1).maybeSingle(),sb.from('leader_overrides').select('*')]);
+const [t,m,s,p,aw,ov]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name'),sb.from('weekly_awards').select('*').order('week_number'),sb.from('leader_overrides').select('*')]);
 const err=[t,m,s,p].find(x=>x.error)?.error;
 if(err){matchHost.innerHTML='<div class="empty-state">حصلت مشكلة في تحميل بيانات البطولة. حاول تحديث الصفحة.</div>';console.error(err);return}
 const T=t.data||[],M=m.data||[],P=p.data||[],S=s.data||[],OV=ov.data||[];
@@ -47,9 +47,9 @@ M.filter(x=>x.status==='finished'&&x.home_score!=null&&x.away_score!=null).forEa
 const rows=Object.values(R).map(r=>({...r,pts:r.w*3+r.d,gd:r.gf-r.ga})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
 if(rows.length)$('#table-body').innerHTML=rows.map((r,i)=>'<tr class="'+(i?'':'first')+'"><td>'+(i+1)+'</td><td class="tn">'+nm(r.id)+'</td><td>'+r.p+'</td><td>'+r.w+'</td><td>'+r.d+'</td><td>'+r.l+'</td><td>'+r.gf+'</td><td>'+r.ga+'</td><td><b>'+r.pts+'</b></td></tr>').join('');
 
-const awards=aw.data||null;
-const weeklyHost=$('#weekly-player-card'),winner=awards?.monthly_player_id?P.find(x=>x.id==awards.monthly_player_id):null;
-if(winner){const week=awards.award_month?new Date(awards.award_month+'T00:00:00').toLocaleDateString('ar-EG') : '';weeklyHost.innerHTML='<article class="monthly-winner-card"><div class="monthly-crown">🏆</div>'+(winner.photo_url?'<img class="monthly-player-photo" src="'+esc(winner.photo_url)+'" alt="">':'<div class="monthly-player-photo monthly-placeholder">⭐</div>')+'<div><span class="eyebrow">'+(week?'الأسبوع الذي يبدأ في '+esc(week):'أفضل لاعب في الأسبوع')+'</span><h3>'+esc(winner.name)+'</h3><p>'+esc(tm(winner.team_id).name)+'</p><small>اختيار إدارة البطولة</small></div></article>';}else weeklyHost.innerHTML='<p class="muted">سيتم الإعلان عن أفضل لاعب في الأسبوع قريبًا.</p>';
+const weeklyAwards=aw.data||[];
+const weeklyHost=$('#weekly-player-card');
+weeklyHost.innerHTML=weeklyAwards.length?'<div class="weekly-public-list">'+weeklyAwards.map(a=>{const winner=P.find(x=>Number(x.id)===Number(a.player_id));if(!winner)return '';return '<article class="monthly-winner-card"><div class="monthly-crown">🏆</div>'+(winner.photo_url?'<img class="monthly-player-photo" src="'+esc(winner.photo_url)+'" alt="">':'<div class="monthly-player-photo monthly-placeholder">⭐</div>')+'<div><span class="eyebrow">الفائز في الأسبوع '+esc(a.week_number)+'</span><h3>'+esc(winner.name)+'</h3><p>'+esc(tm(winner.team_id).name)+'</p><small>اختيار إدارة البطولة</small></div></article>'}).join('')+'</div>':'<p class="muted">سيتم الإعلان عن الفائزين في الأسابيع القادمة.</p>';
 
 const Pstats={};S.forEach(x=>{const pl=P.find(y=>y.id==x.player_id);if(!pl)return;const k=x.player_id,z=Pstats[k]??={id:k,n:pl.name,tm:pl.team_id,photo:pl.photo_url,g:0,a:0,rs:0,rc:0};z.g+=x.goals||0;z.a+=x.assists||0;if(x.rating!=null){z.rs+=+x.rating;z.rc++}});
 const list=(id,arr,f)=>{const a=arr.slice(0,5);$(id).innerHTML=a.length?a.map(p=>'<li class="leader-player-row">'+(p.photo?'<img class="leader-player-photo" src="'+esc(p.photo)+'" alt="" loading="lazy">':'<span class="leader-player-photo leader-player-placeholder">⚽</span>')+'<span class="leader-player-info"><b>'+esc(p.n)+'</b><small class="muted">'+esc(tm(p.tm).name)+'</small></span><strong class="leader-player-value">'+f(p)+'</strong></li>').join(''):'<li class="muted">لا توجد بيانات بعد</li>'};
