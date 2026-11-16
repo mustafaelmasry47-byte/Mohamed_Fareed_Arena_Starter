@@ -41,4 +41,61 @@ $('#editPlayerForm').onsubmit=async e=>{e.preventDefault();if(!editingPlayer)ret
 $('#teamForm').onsubmit=async e=>{e.preventDefault();const{error}=await sb.from('teams').insert({name:$('#tname').value.trim(),short_name:$('#tshort').value.trim()||null,badge_emoji:$('#temoji').value.trim()||'⚽'});if(error)say('تعذرت إضافة الفريق: '+error.message);else{say('تمت إضافة الفريق.',1);e.target.reset();await refresh()}};
 $('#gen').onclick=()=>{if(T.length!==6)return say('لازم يكون عندك 6 فرق بالظبط.');if(M.length&&!confirm('فيه مباريات موجودة بالفعل، والجدول الجديد هيتضاف فوقها. متأكد؟'))return;const n=6,rows=[];let a=T.map(t=>t.id);for(let r=0;r<n-1;r++){for(let i=0;i<n/2;i++){let h=a[i],w=a[n-1-i];if(i===0&&r%2)[h,w]=[w,h];rows.push({round_number:r+1,home_team_id:h,away_team_id:w},{round_number:r+n,home_team_id:w,away_team_id:h})}a=[a[0],a[n-1],...a.slice(1,n-1)]}sb.from('matches').insert(rows).then(async({error})=>{if(error)say(error.message);else{say('تم إنشاء 30 مباراة غير منشورة.',1);await refresh()}})};
 $('#matches').onclick=async e=>{const toggle=e.target.closest('.notes-toggle');if(toggle){const row=toggle.closest('tr'),notes=row.nextElementSibling;notes.hidden=!notes.hidden;toggle.textContent=notes.hidden?'تفاصيل الفريقين':'إغلاق التفاصيل';return}const notesSave=e.target.closest('.notes-save');if(notesSave){const notes=notesSave.closest('.match-notes-row');notesSave.disabled=true;const update={home_details:notes.querySelector('.home-details').value.trim()||null,away_details:notes.querySelector('.away-details').value.trim()||null};const{error}=await sb.from('matches').update(update).eq('id',notes.dataset.id);notesSave.disabled=false;if(error)say('تعذر حفظ التفاصيل: '+error.message);else{say('تم حفظ تفاصيل الفريقين.',1);await refresh()}return}if(!e.target.classList.contains('sv'))return;const tr=e.target.closest('tr'),v=c=>tr.querySelector(c).value;const update={kickoff_at:v('.kickoff')?new Date(v('.kickoff')).toISOString():null,home_score:v('.hs')===''?null:+v('.hs'),away_score:v('.as')===''?null:+v('.as'),status:v('.st'),is_published:tr.querySelector('.pub').checked};const btn=e.target;btn.disabled=true;const{error}=await sb.from('matches').update(update).eq('id',tr.dataset.id);btn.disabled=false;if(error)say('تعذر حفظ المباراة: '+error.message);else{say('تم حفظ بيانات المباراة.',1);await refresh()}};
+
+function derivedStats(playerId){
+ const rows=window.__unused||[];
+ return {goals:0,assists:0,rating:''};
+}
+async function loadLeaderOverrides(){
+ const {data,error}=await sb.from('leader_overrides').select('*');
+ if(error){say('تعذر تحميل المتصدرين: '+error.message);return}
+ leaderOverrides=data||[];
+ $('#leaderOverrides').innerHTML=P.map(p=>{
+  const o=leaderOverrides.find(x=>Number(x.player_id)===Number(p.id))||{};
+  return '<tr data-player-id="'+p.id+'"><td>'+esc(p.name)+'</td><td>'+esc(teamName(p.team_id))+'</td><td><input class="ov-goals" type="number" min="0" step="1" placeholder="محسوب" value="'+(o.goals_override??'')+'"></td><td><input class="ov-assists" type="number" min="0" step="1" placeholder="محسوب" value="'+(o.assists_override??'')+'"></td><td><input class="ov-rating" type="number" min="0" max="10" step="0.1" placeholder="محسوب" value="'+(o.rating_override??'')+'"></td><td><button type="button" class="save-leader-row">حفظ أرقام اللاعب</button></td></tr>';
+ }).join('')||'<tr><td colspan="6">أضف اللاعبين أولًا من قسم الفرق.</td></tr>';
+}
+$('#leaderOverrides').onclick=async e=>{
+ const btn=e.target.closest('.save-leader-row');if(!btn)return;
+ const tr=btn.closest('tr'),id=Number(tr.dataset.playerId);
+ const read=sel=>{const v=tr.querySelector(sel).value.trim();return v===''?null:Number(v)};
+ const goals=read('.ov-goals'),assists=read('.ov-assists'),rating=read('.ov-rating');
+ if([goals,assists].some(v=>v!==null&&(!Number.isInteger(v)||v<0))||rating!==null&&(!Number.isFinite(rating)||rating<0||rating>10))return say('راجع الأرقام: الأهداف والأسيست أعداد صحيحة، والتقييم من 0 إلى 10.');
+ btn.disabled=true;
+ const {error}=await sb.from('leader_overrides').upsert({player_id:id,goals_override:goals,assists_override:assists,rating_override:rating,updated_at:new Date().toISOString()},{onConflict:'player_id'});
+ btn.disabled=false;
+ if(error)say('تعذر حفظ أرقام اللاعب: '+error.message);else{say('تم حفظ أرقام '+(P.find(p=>Number(p.id)===id)?.name||'اللاعب')+'.',1);await loadLeaderOverrides()}
+};
+$('#clearLeaderOverrides').onclick=async()=>{
+ if(!confirm('مسح كل الأرقام اليدوية والرجوع لإحصائيات المباريات؟'))return;
+ const {error}=await sb.from('leader_overrides').delete().neq('player_id',0);
+ if(error)say('تعذر مسح الأرقام: '+error.message);else{say('تم مسح التعديلات اليدوية.',1);await loadLeaderOverrides()}
+};
+async function loadAwards(){
+ const [playersResult,awardsResult]=await Promise.all([
+  sb.from('players').select('*').order('name'),
+  sb.from('weekly_awards').select('*').order('week_number')
+ ]);
+ if(playersResult.error||awardsResult.error){say('تعذر تحميل سجل لاعب الأسبوع: '+(playersResult.error||awardsResult.error).message);return}
+ const players=playersResult.data||[],awards=awardsResult.data||[];
+ $('#weeklyPlayer').innerHTML='<option value="">اختار اللاعب الفائز</option>'+players.map(p=>'<option value="'+p.id+'">'+esc(p.name)+' — '+esc(teamName(p.team_id))+'</option>').join('');
+ $('#weeklyAwardsAdmin').innerHTML=awards.map(a=>{
+  const p=players.find(x=>Number(x.id)===Number(a.player_id));
+  return '<article class="weekly-admin-row"><b>الأسبوع '+a.week_number+'</b><span>'+(p?esc(p.name):'لاعب غير موجود')+'</span><button type="button" class="delete-week-award" data-week="'+a.week_number+'">حذف</button></article>';
+ }).join('')||'<p class="muted">لسه مفيش فائزين مسجلين.</p>';
+}
+$('#saveWeeklyAward').onclick=async()=>{
+ const week=Number($('#weeklyNumber').value),playerId=Number($('#weeklyPlayer').value);
+ if(!Number.isInteger(week)||week<1||week>30)return say('اكتب رقم أسبوع صحيح من 1 إلى 30.');
+ if(!playerId)return say('اختار اللاعب الفائز الأول.');
+ const {error}=await sb.from('weekly_awards').upsert({week_number:week,player_id:playerId,updated_at:new Date().toISOString()},{onConflict:'week_number'});
+ if(error)say('تعذر حفظ لاعب الأسبوع: '+error.message);else{say('تم اعتماد فائز الأسبوع '+week+'.',1);await loadAwards();$('#weeklyNumber').value='';$('#weeklyPlayer').value=''}
+};
+$('#weeklyAwardsAdmin').onclick=async e=>{
+ const btn=e.target.closest('.delete-week-award');if(!btn)return;
+ const week=Number(btn.dataset.week);if(!confirm('حذف الفائز المسجل للأسبوع '+week+'؟'))return;
+ const {error}=await sb.from('weekly_awards').delete().eq('week_number',week);
+ if(error)say('تعذر حذف الفائز: '+error.message);else{say('تم حذف فائز الأسبوع '+week+'.',1);await loadAwards()}
+};
+
 init().then(loadAwards);
