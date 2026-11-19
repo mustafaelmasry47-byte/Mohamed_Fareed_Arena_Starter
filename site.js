@@ -4,10 +4,10 @@ const matchHost=$('#matches-list'),teamsHost=$('#teams-list'),screen=$('#directo
 if(!matchHost||!teamsHost||!screen||!content)return;
 if(CFG.url.includes('YOUR_')){matchHost.innerHTML='<div class="empty-state"><h3>الموقع لسه متربطش بقاعدة البيانات</h3><p>عدّل ملف config.js.</p></div>';return}
 const sb=supabase.createClient(CFG.url,CFG.key);let backAction=()=>{screen.hidden=true;};
-const [t,m,s,p,aw,ov]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name'),sb.from('weekly_awards').select('*').order('week_number'),sb.from('leader_overrides').select('*')]);
-const err=[t,m,s,p].find(x=>x.error)?.error;
+const [t,m,s,p,aw,ov,archivedMatches,archivedStats]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name'),sb.from('weekly_awards').select('*').order('week_number'),sb.from('leader_overrides').select('*'),sb.from('archived_matches').select('match_data'),sb.from('archived_match_stats').select('stats_data')]);
+const err=[t,m,s,p,archivedMatches,archivedStats].find(x=>x.error)?.error;
 if(err){matchHost.innerHTML='<div class="empty-state">حصلت مشكلة في تحميل بيانات البطولة. حاول تحديث الصفحة.</div>';console.error(err);return}
-const T=t.data||[],M=m.data||[],P=p.data||[],S=s.data||[],OV=ov.data||[];
+const T=t.data||[],M=m.data||[],P=p.data||[],S=[...(s.data||[]),...(archivedStats.data||[]).map(x=>x.stats_data).filter(Boolean)],H=[...M,...(archivedMatches.data||[]).map(x=>x.match_data).filter(Boolean)],OV=ov.data||[];
 const tm=id=>T.find(x=>x.id==id)||{name:'غير محدد',badge_emoji:'⚽'},nm=id=>esc(tm(id).badge_emoji+' '+tm(id).name);
 const statsFor=id=>{const rows=S.filter(x=>String(x.player_id)===String(id)),rated=rows.filter(x=>x.rating!=null),manual=OV.find(x=>String(x.player_id)===String(id));return{matches:rows.length,goals:manual?.goals_override??rows.reduce((a,x)=>a+(+x.goals||0),0),assists:manual?.assists_override??rows.reduce((a,x)=>a+(+x.assists||0),0),rating:manual?.rating_override??(rated.length?(rated.reduce((a,x)=>a+(+x.rating||0),0)/rated.length).toFixed(1):'—'),mom:rows.filter(x=>x.is_man_of_match).length}};
 function openScreen(markup){content.innerHTML=markup;screen.hidden=false;document.body.classList.add('directory-open');screen.scrollTop=0;window.scrollTo({top:0,behavior:'smooth'})}
@@ -17,7 +17,7 @@ function showPlayer(id){
  const p=P.find(x=>Number(x.id)===Number(id));if(!p)return;
  const st=statsFor(id),team=tm(p.team_id),rows=S.filter(x=>Number(x.player_id)===Number(id));
  const history=rows.map(row=>{
-  const match=M.find(x=>String(x.id)===String(row.match_id));if(!match)return '';
+  const match=H.find(x=>String(x.id)===String(row.match_id));if(!match)return '';
   const home=String(match.home_team_id)===String(p.team_id),opponent=tm(home?match.away_team_id:match.home_team_id);
   const score=match.status==='finished'&&match.home_score!=null?(home?match.home_score+' - '+match.away_score:match.away_score+' - '+match.home_score):'لم تنتهِ';
   return '<article class="player-match-row"><div><b>الجولة '+esc(match.round_number)+'</b><small>ضد '+esc(opponent.name)+'</small></div><strong>'+esc(score)+'</strong><div class="player-match-contrib"><span>⚽ '+(Number(row.goals)||0)+'</span><span>🎯 '+(Number(row.assists)||0)+'</span><span>⭐ '+(row.rating==null?'—':Number(row.rating).toFixed(1)+'/10')+'</span></div></article>';
@@ -43,7 +43,7 @@ content.onclick=e=>{const player=e.target.closest('[data-player]'),team=e.target
 $('#directory-back').onclick=()=>backAction();
 document.querySelectorAll('a[href="#teams-section"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showTeams();screen.scrollIntoView({behavior:'smooth'})}));
 const R=Object.fromEntries(T.map(x=>[x.id,{id:x.id,p:0,w:0,d:0,l:0,gf:0,ga:0}]));
-M.filter(x=>x.status==='finished'&&x.home_score!=null&&x.away_score!=null).forEach(x=>{const h=R[x.home_team_id],a=R[x.away_team_id];if(!h||!a)return;h.p++;a.p++;h.gf+=x.home_score;h.ga+=x.away_score;a.gf+=x.away_score;a.ga+=x.home_score;if(x.home_score>x.away_score){h.w++;a.l++}else if(x.home_score<x.away_score){a.w++;h.l++}else{h.d++;a.d++}});
+H.filter(x=>x.status==='finished'&&x.home_score!=null&&x.away_score!=null).forEach(x=>{const h=R[x.home_team_id],a=R[x.away_team_id];if(!h||!a)return;h.p++;a.p++;h.gf+=x.home_score;h.ga+=x.away_score;a.gf+=x.away_score;a.ga+=x.home_score;if(x.home_score>x.away_score){h.w++;a.l++}else if(x.home_score<x.away_score){a.w++;h.l++}else{h.d++;a.d++}});
 const rows=Object.values(R).map(r=>({...r,pts:r.w*3+r.d,gd:r.gf-r.ga})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
 if(rows.length)$('#table-body').innerHTML=rows.map((r,i)=>'<tr class="'+(i?'':'first')+'"><td>'+(i+1)+'</td><td class="tn">'+nm(r.id)+'</td><td>'+r.p+'</td><td>'+r.w+'</td><td>'+r.d+'</td><td>'+r.l+'</td><td>'+r.gf+'</td><td>'+r.ga+'</td><td><b>'+r.pts+'</b></td></tr>').join('');
 
