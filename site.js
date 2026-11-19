@@ -5,9 +5,10 @@ if(!matchHost||!teamsHost||!screen||!content)return;
 if(CFG.url.includes('YOUR_')){matchHost.innerHTML='<div class="empty-state"><h3>الموقع لسه متربطش بقاعدة البيانات</h3><p>عدّل ملف config.js.</p></div>';return}
 const sb=supabase.createClient(CFG.url,CFG.key);let backAction=()=>{screen.hidden=true;};
 const [t,m,s,p,aw,ov,archivedMatches,archivedStats]=await Promise.all([sb.from('teams').select('*').order('id'),sb.from('matches').select('*').eq('is_published',true).order('round_number').order('kickoff_at'),sb.from('player_match_stats').select('*'),sb.from('players').select('*').order('shirt_number').order('name'),sb.from('weekly_awards').select('*').order('week_number'),sb.from('leader_overrides').select('*'),sb.from('archived_matches').select('match_data'),sb.from('archived_match_stats').select('stats_data')]);
-const err=[t,m,s,p,archivedMatches,archivedStats].find(x=>x.error)?.error;
+const err=[t,m,s,p].find(x=>x.error)?.error;
+if(archivedMatches.error||archivedStats.error)console.warn('Match archive is not enabled yet. Run sql/match-archive.sql in Supabase.',archivedMatches.error||archivedStats.error);
 if(err){matchHost.innerHTML='<div class="empty-state">حصلت مشكلة في تحميل بيانات البطولة. حاول تحديث الصفحة.</div>';console.error(err);return}
-const T=t.data||[],M=m.data||[],P=p.data||[],S=[...(s.data||[]),...(archivedStats.data||[]).map(x=>x.stats_data).filter(Boolean)],H=[...M,...(archivedMatches.data||[]).map(x=>x.match_data).filter(Boolean)],OV=ov.data||[];
+const T=t.data||[],M=m.data||[],P=p.data||[],S=[...(s.data||[]),...(!archivedStats.error?(archivedStats.data||[]).map(x=>x.stats_data).filter(Boolean):[])],H=[...M,...(!archivedMatches.error?(archivedMatches.data||[]).map(x=>x.match_data).filter(Boolean):[])],OV=ov.data||[];
 const tm=id=>T.find(x=>x.id==id)||{name:'غير محدد',badge_emoji:'⚽'},nm=id=>esc(tm(id).badge_emoji+' '+tm(id).name);
 const statsFor=id=>{const rows=S.filter(x=>String(x.player_id)===String(id)),rated=rows.filter(x=>x.rating!=null),manual=OV.find(x=>String(x.player_id)===String(id));return{matches:rows.length,goals:manual?.goals_override??rows.reduce((a,x)=>a+(+x.goals||0),0),assists:manual?.assists_override??rows.reduce((a,x)=>a+(+x.assists||0),0),rating:manual?.rating_override??(rated.length?(rated.reduce((a,x)=>a+(+x.rating||0),0)/rated.length).toFixed(1):'—'),mom:rows.filter(x=>x.is_man_of_match).length}};
 function openScreen(markup){content.innerHTML=markup;screen.hidden=false;document.body.classList.add('directory-open');screen.scrollTop=0;window.scrollTo({top:0,behavior:'smooth'})}
